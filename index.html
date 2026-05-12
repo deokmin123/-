@@ -122,21 +122,21 @@
     .cat-action-btn{font-size:10px;color:var(--text-muted);background:none;border:none;cursor:pointer;padding:0;text-decoration:underline;font-family:'Noto Sans KR',sans-serif;}
     .cat-action-btn:hover{color:var(--gold-light);}
 
-    .api-key-bar{background:#0e1a0e;border-bottom:1px solid #2a4a2a;padding:7px 18px;display:flex;align-items:center;gap:10px;flex-shrink:0;}
-    .api-key-bar label{font-size:11px;color:#6dbf6d;white-space:nowrap;}
-    .api-key-bar input{flex:1;max-width:420px;background:#0a120a;border:1px solid #3a6a3a;border-radius:6px;color:#9ddf9d;font-size:12px;padding:5px 10px;outline:none;font-family:'Noto Sans KR',sans-serif;}
-    .api-key-bar input:focus{border-color:#6dbf6d;}
-    .api-key-bar input::placeholder{color:#3a6a3a;}
-    .api-key-link{font-size:10px;color:#4a9a4a;text-decoration:underline;cursor:pointer;white-space:nowrap;}
-    .api-key-link:hover{color:#6dbf6d;}
+    .api-key-bar{background:#0e0e1a;border-bottom:1px solid #2a2a4a;padding:7px 18px;display:flex;align-items:center;gap:10px;flex-shrink:0;}
+    .api-key-bar label{font-size:11px;color:#6d6dbf;white-space:nowrap;}
+    .api-key-bar input{flex:1;max-width:420px;background:#0a0a12;border:1px solid #3a3a6a;border-radius:6px;color:#9d9ddf;font-size:12px;padding:5px 10px;outline:none;font-family:'Noto Sans KR',sans-serif;}
+    .api-key-bar input:focus{border-color:#6d6dbf;}
+    .api-key-bar input::placeholder{color:#3a3a6a;}
+    .api-key-link{font-size:10px;color:#4a4a9a;text-decoration:underline;cursor:pointer;white-space:nowrap;}
+    .api-key-link:hover{color:#6d6dbf;}
 
     /* API 키 안내 */
-    .api-guide{background:#0a150a;border-bottom:1px solid #1e3a1e;padding:8px 18px;flex-shrink:0;}
+    .api-guide{background:#0a0a15;border-bottom:1px solid #1e1e3a;padding:8px 18px;flex-shrink:0;}
     .api-guide-inner{max-width:900px;margin:0 auto;display:flex;gap:24px;align-items:flex-start;}
-    .api-guide-item{flex:1;font-size:11px;color:#5a9a5a;line-height:1.7;}
-    .api-guide-item strong{color:#7dbf7d;display:block;margin-bottom:2px;font-size:11px;}
-    .api-guide-item a{color:#6dbf6d;text-decoration:underline;}
-    .api-guide-item a:hover{color:#9ddf9d;}
+    .api-guide-item{flex:1;font-size:11px;color:#5a5a9a;line-height:1.7;}
+    .api-guide-item strong{color:#7d7dbf;display:block;margin-bottom:2px;font-size:11px;}
+    .api-guide-item a{color:#6d6dbf;text-decoration:underline;}
+    .api-guide-item a:hover{color:#9d9ddf;}
 
     /* Input */
     .input-area{background:var(--surface);border-top:1px solid var(--border);padding:10px 14px;flex-shrink:0;}
@@ -158,11 +158,11 @@
 <body>
 <div class="top-ornament"></div>
 
-<!-- Gemini API 키 입력 바 -->
+<!-- Groq API 키 입력 바 -->
 <div class="api-key-bar">
-  <label>🔑 Gemini API Key</label>
-  <input type="password" id="apiKeyInput" placeholder="AIza... (aistudio.google.com에서 무료 발급)"/>
-  <a class="api-key-link" href="https://aistudio.google.com/apikey" target="_blank">무료 키 발급 →</a>
+  <label>🔑 Groq API Key</label>
+  <input type="password" id="apiKeyInput" placeholder="gsk_... (console.groq.com에서 무료 발급)"/>
+  <a class="api-key-link" href="https://console.groq.com" target="_blank">무료 키 발급 →</a>
 </div>
 
 <!-- API 키 안내문 -->
@@ -170,14 +170,14 @@
   <div class="api-guide-inner">
     <div class="api-guide-item">
       <strong>🔑 API 키란 무엇인가요?</strong>
-      이 에이전트는 Google Gemini AI를 사용합니다. 무료로 이용하려면 본인의 API 키가 필요해요. 키는 개인 계정에 귀속되며 하루 1,500회까지 무료로 사용할 수 있습니다.
+      이 에이전트는 Groq AI를 사용합니다. 무료로 이용하려면 본인의 API 키가 필요해요. 키는 개인 계정에 귀속되며 무료로 사용할 수 있습니다.
     </div>
     <div class="api-guide-item">
       <strong>📋 무료 API 키 발급 방법</strong>
-      ① <a href="https://aistudio.google.com/apikey" target="_blank">aistudio.google.com/apikey</a> 접속<br>
-      ② 구글 계정으로 로그인 (결제 정보 입력 ❌)<br>
-      ③ "Create API key" 클릭 → 키 복사<br>
-      ④ 위 입력창에 붙여넣기 후 사용
+      ① <a href="https://console.groq.com" target="_blank">console.groq.com</a> 접속<br>
+      ② 구글 계정으로 간편 로그인<br>
+      ③ 왼쪽 메뉴 "API Keys" → "Create API Key"<br>
+      ④ 키 복사 후 위 입력창에 붙여넣기
     </div>
     <div class="api-guide-item">
       <strong>⚠ 주의사항</strong>
@@ -619,7 +619,7 @@ async function sendMessage() {
   // API 키 확인
   const apiKey = document.getElementById('apiKeyInput').value.trim();
   if (!apiKey) {
-    showToast('⚠ 상단에 Gemini API 키를 먼저 입력해주세요!');
+    showToast('⚠ 상단에 Groq API 키를 먼저 입력해주세요!');
     document.getElementById('apiKeyInput').focus();
     return;
   }
@@ -629,33 +629,37 @@ async function sendMessage() {
   appendMessage('user', text);
   inputEl.value = ''; inputEl.style.height = 'auto';
   sendBtn.disabled = true;
-  history.push({role:'user', parts:[{text}]});
+  history.push({role:'user', content:text});
   showTyping();
 
   try {
-    // Gemini API 호출
-    const res = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-001:generateContent?key=${apiKey}`,
-      {
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({
-          system_instruction: { parts:[{ text: SYSTEM_PROMPT }] },
-          contents: history,
-          generationConfig: { maxOutputTokens: 2000, temperature: 0.7 }
-        })
-      }
-    );
+    // Groq API 호출
+    const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method:'POST',
+      headers:{
+        'Content-Type':'application/json',
+        'Authorization':`Bearer ${apiKey}`
+      },
+      body: JSON.stringify({
+        model:'llama-3.3-70b-versatile',
+        max_tokens: 2000,
+        temperature: 0.7,
+        messages:[
+          {role:'system', content: SYSTEM_PROMPT},
+          ...history
+        ]
+      })
+    });
     const data = await res.json();
     removeTyping();
 
     if (!res.ok) {
       const msg = data.error?.message || '알 수 없는 오류';
-      appendMessage('ai', `<div class="error-bubble">⚠ Gemini 오류: ${msg}<br><small>API 키를 다시 확인해주세요.</small></div>`, true);
+      appendMessage('ai', `<div class="error-bubble">⚠ Groq 오류: ${msg}<br><small>API 키를 다시 확인해주세요.</small></div>`, true);
       history.pop(); sendBtn.disabled = false; return;
     }
 
-    const fullText = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    const fullText = data.choices?.[0]?.message?.content || '';
 
     // <keywords> 블록에서 다국어 키워드 추출
     let keywords;
@@ -671,8 +675,8 @@ async function sendMessage() {
     const displayText = fullText.replace(/<keywords>[\s\S]*?<\/keywords>/g,'').trim();
     appendMessage('ai', (displayText||'답변을 가져오지 못했습니다.') + buildSiteLinks(keywords), true);
 
-    // Gemini 형식으로 히스토리 저장
-    history.push({role:'model', parts:[{text: fullText}]});
+    // 히스토리 저장
+    history.push({role:'assistant', content: fullText});
 
   } catch(err) {
     removeTyping();

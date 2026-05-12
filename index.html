@@ -130,6 +130,14 @@
     .api-key-link{font-size:10px;color:#4a9a4a;text-decoration:underline;cursor:pointer;white-space:nowrap;}
     .api-key-link:hover{color:#6dbf6d;}
 
+    /* API 키 안내 */
+    .api-guide{background:#0a150a;border-bottom:1px solid #1e3a1e;padding:8px 18px;flex-shrink:0;}
+    .api-guide-inner{max-width:900px;margin:0 auto;display:flex;gap:24px;align-items:flex-start;}
+    .api-guide-item{flex:1;font-size:11px;color:#5a9a5a;line-height:1.7;}
+    .api-guide-item strong{color:#7dbf7d;display:block;margin-bottom:2px;font-size:11px;}
+    .api-guide-item a{color:#6dbf6d;text-decoration:underline;}
+    .api-guide-item a:hover{color:#9ddf9d;}
+
     /* Input */
     .input-area{background:var(--surface);border-top:1px solid var(--border);padding:10px 14px;flex-shrink:0;}
     .input-wrapper{display:flex;gap:8px;max-width:660px;margin:0 auto;align-items:flex-end;}
@@ -155,6 +163,29 @@
   <label>🔑 Gemini API Key</label>
   <input type="password" id="apiKeyInput" placeholder="AIza... (aistudio.google.com에서 무료 발급)"/>
   <a class="api-key-link" href="https://aistudio.google.com/apikey" target="_blank">무료 키 발급 →</a>
+</div>
+
+<!-- API 키 안내문 -->
+<div class="api-guide">
+  <div class="api-guide-inner">
+    <div class="api-guide-item">
+      <strong>🔑 API 키란 무엇인가요?</strong>
+      이 에이전트는 Google Gemini AI를 사용합니다. 무료로 이용하려면 본인의 API 키가 필요해요. 키는 개인 계정에 귀속되며 하루 1,500회까지 무료로 사용할 수 있습니다.
+    </div>
+    <div class="api-guide-item">
+      <strong>📋 무료 API 키 발급 방법</strong>
+      ① <a href="https://aistudio.google.com/apikey" target="_blank">aistudio.google.com/apikey</a> 접속<br>
+      ② 구글 계정으로 로그인 (결제 정보 입력 ❌)<br>
+      ③ "Create API key" 클릭 → 키 복사<br>
+      ④ 위 입력창에 붙여넣기 후 사용
+    </div>
+    <div class="api-guide-item">
+      <strong>⚠ 주의사항</strong>
+      API 키는 비밀번호처럼 소중히 관리하세요.<br>
+      타인과 키를 공유하면 본인의 무료 한도가 소진될 수 있습니다.<br>
+      키는 이 페이지에 저장되지 않으며, 창을 닫으면 사라집니다.
+    </div>
+  </div>
 </div>
 <header>
   <div class="header-icon">🏛</div>

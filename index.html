@@ -3,254 +3,548 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>역사 자료 탐구 AI</title>
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;600;700&family=Noto+Sans+KR:wght@300;400;500&display=swap" rel="stylesheet"/>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <title>역사 자료 탐구 도구</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;600;700&family=Noto+Sans+KR:wght@300;400;500;600&display=swap" rel="stylesheet"/>
   <style>
     :root {
-      --bg:#0e0b07;--surface:#1a1510;--surface2:#221e17;--border:#3a3020;
-      --gold:#c9a84c;--gold-light:#e8c97a;--gold-dim:#7a6030;
-      --text:#f0e8d8;--text-muted:#8a7e6a;--green:#4caf7d;
-      --user-bg:#2a2010;--ai-bg:#161210;
+      --bg:#0e0b07;--surface:#1a1510;--surface2:#221e17;--surface3:#2a2318;
+      --border:#3a3020;--gold:#c9a84c;--gold-light:#e8c97a;--gold-dim:#7a6030;
+      --text:#f0e8d8;--text-muted:#8a7e6a;--green:#4caf7d;--blue:#6d9dbf;
     }
     *{box-sizing:border-box;margin:0;padding:0;}
-    body{background:var(--bg);color:var(--text);font-family:'Noto Sans KR',sans-serif;height:100vh;display:flex;flex-direction:column;overflow:hidden;}
-    .top-ornament{background:linear-gradient(90deg,transparent,var(--gold-dim),var(--gold),var(--gold-dim),transparent);height:2px;flex-shrink:0;}
+    body{background:var(--bg);color:var(--text);font-family:'Noto Sans KR',sans-serif;min-height:100vh;}
+
+    .top-ornament{background:linear-gradient(90deg,transparent,var(--gold-dim),var(--gold),var(--gold-dim),transparent);height:2px;}
 
     /* HEADER */
-    header{background:var(--surface);border-bottom:1px solid var(--border);padding:10px 18px;display:flex;align-items:center;gap:12px;flex-shrink:0;}
-    .header-icon{width:36px;height:36px;background:linear-gradient(135deg,var(--gold-dim),var(--gold));border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0;}
-    .header-text h1{font-family:'Noto Serif KR',serif;font-size:16px;font-weight:700;color:var(--gold-light);letter-spacing:.04em;}
-    .header-text p{font-size:10px;color:var(--text-muted);margin-top:1px;}
-    .header-actions{margin-left:auto;display:flex;align-items:center;gap:8px;}
-    .site-count{font-size:11px;color:var(--text-muted);background:var(--surface2);border:1px solid var(--border);padding:4px 10px;border-radius:20px;}
-    .site-count span{color:var(--gold);font-weight:600;}
-    .upload-btn{display:flex;align-items:center;gap:5px;background:var(--surface2);border:1px solid var(--border);color:var(--text-muted);font-family:'Noto Sans KR',sans-serif;font-size:11px;padding:6px 11px;border-radius:6px;cursor:pointer;transition:all .2s;white-space:nowrap;}
-    .upload-btn:hover{border-color:var(--gold-dim);color:var(--gold-light);}
-    .upload-btn input{display:none;}
-    .status-dot{width:7px;height:7px;background:var(--green);border-radius:50%;box-shadow:0 0 6px #4caf7d88;animation:pulse 2s infinite;}
-    @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+    header{background:var(--surface);border-bottom:1px solid var(--border);padding:14px 24px;display:flex;align-items:center;gap:14px;position:sticky;top:0;z-index:50;}
+    .header-icon{width:40px;height:40px;background:linear-gradient(135deg,var(--gold-dim),var(--gold));border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:19px;flex-shrink:0;}
+    .header-text h1{font-family:'Noto Serif KR',serif;font-size:17px;font-weight:700;color:var(--gold-light);letter-spacing:.04em;}
+    .header-text p{font-size:11px;color:var(--text-muted);margin-top:1px;}
+    .header-badge{margin-left:auto;background:var(--surface2);border:1px solid var(--border);color:var(--text-muted);font-size:11px;padding:4px 12px;border-radius:20px;white-space:nowrap;}
+    .header-badge span{color:var(--gold);font-weight:600;}
 
-    /* BODY */
-    .body-wrap{flex:1;display:flex;overflow:hidden;}
+    /* NAV TABS */
+    .nav-tabs{background:var(--surface);border-bottom:1px solid var(--border);display:flex;padding:0 24px;gap:0;}
+    .nav-tab{background:none;border:none;color:var(--text-muted);font-family:'Noto Sans KR',sans-serif;font-size:13px;padding:12px 18px;cursor:pointer;border-bottom:2px solid transparent;transition:all .2s;}
+    .nav-tab:hover{color:var(--text);}
+    .nav-tab.active{color:var(--gold-light);border-bottom-color:var(--gold);}
 
-    /* SIDEBAR */
-    .sidebar{width:230px;flex-shrink:0;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden;}
-    .sidebar-header{padding:10px 12px 6px;font-size:10px;letter-spacing:.1em;color:var(--gold-dim);text-transform:uppercase;border-bottom:1px solid var(--border);flex-shrink:0;}
+    /* PAGES */
+    .page{display:none;max-width:1100px;margin:0 auto;padding:28px 20px;}
+    .page.active{display:block;}
 
-    /* 카테고리 탭 */
-    .cat-tabs{display:flex;flex-wrap:wrap;gap:4px;padding:8px 10px;border-bottom:1px solid var(--border);flex-shrink:0;}
-    .cat-tab{background:var(--surface2);border:1px solid var(--border);color:var(--text-muted);font-size:10px;padding:3px 7px;border-radius:4px;cursor:pointer;transition:all .15s;font-family:'Noto Sans KR',sans-serif;}
-    .cat-tab:hover,.cat-tab.active{background:#2a2010;border-color:var(--gold-dim);color:var(--gold-light);}
+    /* CARDS */
+    .card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:24px;margin-bottom:20px;}
+    .card-title{font-family:'Noto Serif KR',serif;font-size:15px;color:var(--gold-light);margin-bottom:14px;display:flex;align-items:center;gap:8px;}
 
-    .site-list{flex:1;overflow-y:auto;padding:4px 0;}
-    .site-list::-webkit-scrollbar{width:3px;}
-    .site-list::-webkit-scrollbar-thumb{background:var(--border);}
-    .site-item{padding:7px 12px;display:flex;flex-direction:column;gap:2px;border-left:2px solid transparent;transition:all .15s;cursor:default;}
-    .site-item:hover{background:var(--surface2);border-left-color:var(--gold-dim);}
-    .site-item .site-name{font-size:11px;color:var(--text);font-weight:500;line-height:1.3;}
-    .site-item .site-url{font-size:9px;color:var(--gold-dim);text-overflow:ellipsis;overflow:hidden;white-space:nowrap;}
-    .site-badge{font-size:9px;padding:1px 5px;border-radius:3px;display:inline-block;width:fit-content;}
-    .badge-search{background:#1a2a1a;color:#6dbf6d;border:1px solid #3a6a3a;}
-    .badge-home{background:#1a1a2a;color:#6d6dbf;border:1px solid #3a3a6a;}
+    /* SEARCH */
+    .search-row{display:flex;gap:10px;flex-wrap:wrap;}
+    .search-input{flex:1;min-width:200px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;color:var(--text);font-family:'Noto Sans KR',sans-serif;font-size:14px;padding:11px 16px;outline:none;transition:border-color .2s;}
+    .search-input:focus{border-color:var(--gold-dim);}
+    .search-input::placeholder{color:var(--text-muted);}
+    .btn-gold{background:linear-gradient(135deg,var(--gold-dim),var(--gold));border:none;border-radius:10px;color:#1a1000;font-family:'Noto Sans KR',sans-serif;font-size:13px;font-weight:600;padding:11px 20px;cursor:pointer;transition:all .2s;white-space:nowrap;}
+    .btn-gold:hover{opacity:.85;}
+    .btn-dim{background:var(--surface2);border:1px solid var(--border);border-radius:10px;color:var(--text-muted);font-family:'Noto Sans KR',sans-serif;font-size:12px;padding:11px 16px;cursor:pointer;transition:all .2s;}
+    .btn-dim:hover{border-color:var(--gold-dim);color:var(--text);}
 
-    .sidebar-footer{padding:8px 12px;border-top:1px solid var(--border);flex-shrink:0;}
-    .add-hint{font-size:9px;color:var(--text-muted);line-height:1.5;text-align:center;}
+    .kw-langs{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px;}
+    .kw-tag{background:var(--surface2);border:1px solid var(--border);border-radius:6px;font-size:11px;padding:4px 10px;color:var(--text-muted);}
+    .kw-tag b{color:var(--gold-light);}
 
-    /* CHAT */
-    .chat-wrap{flex:1;display:flex;flex-direction:column;overflow:hidden;}
-    #chat{flex:1;overflow-y:auto;padding:20px 18px;display:flex;flex-direction:column;gap:18px;scroll-behavior:smooth;}
-    #chat::-webkit-scrollbar{width:4px;}
-    #chat::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
+    /* FILTER */
+    .filter-grid{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:8px;}
+    .filter-btn{background:var(--surface2);border:1px solid var(--border);color:var(--text-muted);font-family:'Noto Sans KR',sans-serif;font-size:11px;padding:4px 10px;border-radius:5px;cursor:pointer;transition:all .15s;}
+    .filter-btn:hover{border-color:var(--gold-dim);color:var(--text);}
+    .filter-btn.on{background:#2a1e08;border-color:var(--gold);color:var(--gold-light);font-weight:600;}
+    .filter-actions{display:flex;gap:10px;margin-bottom:14px;}
+    .filter-action{font-size:11px;color:var(--text-muted);background:none;border:none;cursor:pointer;text-decoration:underline;font-family:'Noto Sans KR',sans-serif;}
+    .filter-action:hover{color:var(--gold-light);}
 
-    /* Welcome */
-    .welcome{text-align:center;padding:24px 16px;animation:fadeIn .8s ease;}
-    .welcome-seal{font-size:40px;margin-bottom:12px;display:block;}
-    .welcome h2{font-family:'Noto Serif KR',serif;font-size:18px;color:var(--gold-light);margin-bottom:8px;}
-    .welcome p{font-size:13px;color:var(--text-muted);line-height:1.7;margin-bottom:18px;}
-    .suggestion-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px;max-width:400px;margin:0 auto;}
-    .suggestion-btn{background:var(--surface2);border:1px solid var(--border);color:var(--text);font-family:'Noto Sans KR',sans-serif;font-size:12px;padding:9px 11px;border-radius:8px;cursor:pointer;text-align:left;line-height:1.4;transition:all .2s;}
-    .suggestion-btn:hover{border-color:var(--gold-dim);color:var(--gold-light);background:#2a2318;}
-    .suggestion-btn .emoji{display:block;margin-bottom:3px;font-size:15px;}
+    /* LEGEND */
+    .legend{display:flex;gap:16px;margin-bottom:14px;flex-wrap:wrap;}
+    .legend-item{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text-muted);}
+    .legend-dot{width:10px;height:10px;border-radius:2px;}
+    .dot-search{background:var(--green);}
+    .dot-home{background:var(--blue);}
 
-    /* Messages */
-    .message{display:flex;gap:10px;animation:slideUp .3s ease;max-width:660px;width:100%;margin:0 auto;}
-    @keyframes slideUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
-    @keyframes fadeIn{from{opacity:0}to{opacity:1}}
-    .message.user{flex-direction:row-reverse;}
-    .avatar{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0;margin-top:2px;}
-    .avatar.ai{background:linear-gradient(135deg,var(--gold-dim),var(--gold));}
-    .avatar.user{background:var(--surface2);border:1px solid var(--border);}
-    .bubble{padding:11px 15px;border-radius:12px;font-size:13px;line-height:1.75;max-width:calc(100% - 42px);}
-    .message.ai .bubble{background:var(--ai-bg);border:1px solid var(--border);border-top-left-radius:4px;}
-    .message.user .bubble{background:var(--user-bg);border:1px solid #3a3020;border-top-right-radius:4px;}
-    .bubble h3{font-family:'Noto Serif KR',serif;color:var(--gold-light);font-size:14px;margin-bottom:7px;padding-bottom:5px;border-bottom:1px solid var(--border);}
-    .bubble p{margin-bottom:7px;}
-    .bubble p:last-child{margin-bottom:0;}
-    .bubble ul{padding-left:16px;margin:5px 0;}
-    .bubble li{margin-bottom:3px;}
-    .bubble strong{color:var(--gold-light);font-weight:600;}
-    .bubble .disclaimer{margin-top:9px;padding-top:7px;border-top:1px solid var(--border);font-size:11px;color:var(--text-muted);}
+    /* SITE GRID */
+    .sites-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(255px,1fr));gap:7px;}
+    .site-card{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 13px;display:flex;align-items:center;gap:10px;text-decoration:none;transition:all .2s;}
+    .site-card:hover{border-color:var(--gold-dim);background:var(--surface3);}
+    .site-card.searchable{border-left:3px solid var(--green);}
+    .site-card.homepage{border-left:3px solid var(--blue);}
+    .site-icon{font-size:15px;flex-shrink:0;}
+    .site-info{flex:1;min-width:0;}
+    .site-name{font-size:12px;color:var(--text);font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    .site-cat{font-size:10px;color:var(--text-muted);margin-top:1px;}
+    .site-badge{font-size:9px;padding:2px 5px;border-radius:3px;flex-shrink:0;white-space:nowrap;}
+    .badge-s{background:#0e1a0e;color:#6dbf6d;border:1px solid #2a5a2a;}
+    .badge-h{background:#0e0e1a;color:#6d9dbf;border:1px solid #2a2a5a;}
 
-    /* 사이트 링크 섹션 */
-    .site-links-section{margin-top:12px;padding-top:10px;border-top:1px solid var(--border);}
-    .site-links-label{font-size:11px;color:var(--gold-dim);margin-bottom:6px;letter-spacing:.04em;}
-    .kw-summary{font-size:11px;color:var(--text-muted);background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:6px 10px;margin-bottom:8px;line-height:1.6;}
-    .lang-tag{font-size:8px;background:var(--gold-dim);color:#000;border-radius:2px;padding:0 3px;margin-right:2px;font-weight:700;}
-    .site-links-grid{display:flex;flex-wrap:wrap;gap:5px;}
-    .site-link-btn{display:inline-flex;align-items:center;gap:4px;border:1px solid;font-size:10px;padding:4px 9px;border-radius:4px;text-decoration:none;transition:all .2s;font-family:'Noto Sans KR',sans-serif;}
-    .site-link-btn.type-search{background:#0e1a0e;border-color:#3a6a3a;color:#6dbf6d;}
-    .site-link-btn.type-search:hover{background:#1a2a1a;color:#9ddf9d;}
-    .site-link-btn.type-home{background:#0e0e1a;border-color:#3a3a6a;color:#8d8ddf;}
-    .site-link-btn.type-home:hover{background:#1a1a2a;color:#adadff;}
+    .sites-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+    .sites-count{font-size:12px;color:var(--text-muted);}
+    .sites-count b{color:var(--gold);}
+    .empty{text-align:center;padding:40px;color:var(--text-muted);font-size:13px;}
 
-    /* Typing */
-    .typing-indicator{display:flex;gap:4px;align-items:center;padding:13px 15px;}
-    .typing-indicator span{width:6px;height:6px;background:var(--gold-dim);border-radius:50%;animation:bounce 1.2s infinite;}
-    .typing-indicator span:nth-child(2){animation-delay:.2s;}
-    .typing-indicator span:nth-child(3){animation-delay:.4s;}
-    @keyframes bounce{0%,80%,100%{transform:translateY(0);opacity:.4}40%{transform:translateY(-6px);opacity:1}}
+    /* CLAUDE PROMPT */
+    .prompt-steps{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px;margin-bottom:18px;}
+    .prompt-step{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px 14px;}
+    .step-num{width:22px;height:22px;background:var(--gold-dim);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#1a1000;margin-bottom:6px;}
+    .step-text{font-size:11px;color:var(--text-muted);line-height:1.6;}
+    .step-text b{color:var(--gold-light);display:block;margin-bottom:2px;}
+    .copy-btn{display:flex;align-items:center;gap:8px;background:linear-gradient(135deg,var(--gold-dim),var(--gold));border:none;border-radius:10px;color:#1a1000;font-family:'Noto Sans KR',sans-serif;font-size:13px;font-weight:700;padding:12px 24px;cursor:pointer;transition:all .2s;margin-bottom:12px;}
+    .copy-btn:hover{opacity:.85;transform:scale(1.02);}
+    .copy-btn.copied{background:linear-gradient(135deg,#2a6a2a,#4caf7d);color:#fff;}
+    .claude-link{display:inline-flex;align-items:center;gap:6px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--blue);font-size:12px;padding:8px 14px;text-decoration:none;transition:all .2s;}
+    .claude-link:hover{border-color:var(--blue);}
 
-    /* 카테고리 필터 패널 */
-    .cat-filter-area{background:var(--surface);border-top:1px solid var(--border);padding:8px 14px;flex-shrink:0;}
-    .cat-filter-label{font-size:10px;color:var(--gold-dim);letter-spacing:.08em;margin-bottom:5px;max-width:660px;margin-left:auto;margin-right:auto;}
-    .cat-filter-grid{display:flex;flex-wrap:wrap;gap:5px;max-width:660px;margin:0 auto 5px;}
-    .cat-filter-btn{background:var(--surface2);border:1px solid var(--border);color:var(--text-muted);font-family:'Noto Sans KR',sans-serif;font-size:10px;padding:4px 9px;border-radius:4px;cursor:pointer;transition:all .15s;}
-    .cat-filter-btn:hover{border-color:var(--gold-dim);color:var(--text);}
-    .cat-filter-btn.on{background:#2a1e08;border-color:var(--gold);color:var(--gold-light);font-weight:600;}
-    .cat-filter-actions{display:flex;gap:8px;max-width:660px;margin:0 auto 4px;}
-    .cat-action-btn{font-size:10px;color:var(--text-muted);background:none;border:none;cursor:pointer;padding:0;text-decoration:underline;font-family:'Noto Sans KR',sans-serif;}
-    .cat-action-btn:hover{color:var(--gold-light);}
+    /* GUIDE */
+    .guide-section{margin-bottom:24px;}
+    .guide-section-title{font-family:'Noto Serif KR',serif;font-size:16px;color:var(--gold-light);margin-bottom:16px;padding-bottom:8px;border-bottom:1px solid var(--border);}
+    .guide-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px;margin-bottom:20px;}
+    .guide-card{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:16px;}
+    .guide-card-title{font-size:13px;font-weight:600;color:var(--gold-light);margin-bottom:8px;display:flex;align-items:center;gap:6px;}
+    .guide-card-body{font-size:12px;color:var(--text-muted);line-height:1.8;}
+    .guide-card-body b{color:var(--text);}
+    .guide-tip{background:#1a1a0a;border:1px solid var(--gold-dim);border-radius:8px;padding:12px 16px;font-size:12px;color:var(--text-muted);line-height:1.8;margin-bottom:12px;}
+    .guide-tip b{color:var(--gold-light);}
+    .guide-ol{padding-left:18px;font-size:12px;color:var(--text-muted);line-height:2;}
+    .guide-ol li b{color:var(--text);}
+    .guide-table{width:100%;border-collapse:collapse;font-size:12px;margin-bottom:16px;}
+    .guide-table th{background:var(--surface2);color:var(--gold-light);padding:8px 12px;text-align:left;border:1px solid var(--border);}
+    .guide-table td{padding:8px 12px;border:1px solid var(--border);color:var(--text-muted);vertical-align:top;}
+    .guide-table td b{color:var(--text);}
+    .tag-free{background:#0e1a0e;color:#6dbf6d;border:1px solid #2a5a2a;font-size:10px;padding:1px 5px;border-radius:3px;}
+    .tag-member{background:#1a0e0e;color:#bf6d6d;border:1px solid #5a2a2a;font-size:10px;padding:1px 5px;border-radius:3px;}
 
-    .api-key-bar{background:#0e0e1a;border-bottom:1px solid #2a2a4a;padding:7px 18px;display:flex;align-items:center;gap:10px;flex-shrink:0;}
-    .api-key-bar label{font-size:11px;color:#6d6dbf;white-space:nowrap;}
-    .api-key-bar input{flex:1;max-width:420px;background:#0a0a12;border:1px solid #3a3a6a;border-radius:6px;color:#9d9ddf;font-size:12px;padding:5px 10px;outline:none;font-family:'Noto Sans KR',sans-serif;}
-    .api-key-bar input:focus{border-color:#6d6dbf;}
-    .api-key-bar input::placeholder{color:#3a3a6a;}
-    .api-key-link{font-size:10px;color:#4a4a9a;text-decoration:underline;cursor:pointer;white-space:nowrap;}
-    .api-key-link:hover{color:#6d6dbf;}
-
-    /* API 키 안내 */
-    .api-guide{background:#0a0a15;border-bottom:1px solid #1e1e3a;padding:8px 18px;flex-shrink:0;}
-    .api-guide-inner{max-width:900px;margin:0 auto;display:flex;gap:24px;align-items:flex-start;}
-    .api-guide-item{flex:1;font-size:11px;color:#5a5a9a;line-height:1.7;}
-    .api-guide-item strong{color:#7d7dbf;display:block;margin-bottom:2px;font-size:11px;}
-    .api-guide-item a{color:#6d6dbf;text-decoration:underline;}
-    .api-guide-item a:hover{color:#9d9ddf;}
-
-    /* Input */
-    .input-area{background:var(--surface);border-top:1px solid var(--border);padding:10px 14px;flex-shrink:0;}
-    .input-wrapper{display:flex;gap:8px;max-width:660px;margin:0 auto;align-items:flex-end;}
-    textarea{flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:10px;color:var(--text);font-family:'Noto Sans KR',sans-serif;font-size:13px;padding:9px 13px;resize:none;line-height:1.5;max-height:110px;min-height:40px;outline:none;transition:border-color .2s;}
-    textarea:focus{border-color:var(--gold-dim);}
-    textarea::placeholder{color:var(--text-muted);}
-    #sendBtn{width:40px;height:40px;background:linear-gradient(135deg,var(--gold-dim),var(--gold));border:none;border-radius:10px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px;transition:all .2s;flex-shrink:0;}
-    #sendBtn:hover{opacity:.85;transform:scale(1.05);}
-    #sendBtn:disabled{opacity:.4;cursor:not-allowed;transform:none;}
-    .input-hint{text-align:center;font-size:10px;color:var(--text-muted);margin-top:5px;}
-
-    /* Toast */
-    .toast{position:fixed;bottom:70px;left:50%;transform:translateX(-50%);background:var(--surface);border:1px solid var(--gold-dim);color:var(--gold-light);font-size:12px;padding:9px 18px;border-radius:8px;box-shadow:0 4px 20px rgba(0,0,0,.5);animation:toastIn .3s ease;z-index:100;white-space:nowrap;}
+    /* TOAST */
+    .toast{position:fixed;bottom:30px;left:50%;transform:translateX(-50%);background:var(--surface);border:1px solid var(--gold-dim);color:var(--gold-light);font-size:13px;padding:10px 22px;border-radius:8px;box-shadow:0 4px 20px rgba(0,0,0,.5);z-index:200;white-space:nowrap;animation:toastIn .3s ease;}
     @keyframes toastIn{from{opacity:0;transform:translateX(-50%) translateY(10px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
-    .error-bubble{background:#2a0a08;border:1px solid #5a1a15;color:#e88;padding:9px 13px;border-radius:8px;font-size:13px;}
   </style>
 </head>
 <body>
 <div class="top-ornament"></div>
-
-<!-- Groq API 키 입력 바 -->
-<div class="api-key-bar">
-  <label>🔑 Groq API Key</label>
-  <input type="password" id="apiKeyInput" placeholder="gsk_... (console.groq.com에서 무료 발급)"/>
-  <a class="api-key-link" href="https://console.groq.com" target="_blank">무료 키 발급 →</a>
-</div>
-
-<!-- API 키 안내문 -->
-<div class="api-guide">
-  <div class="api-guide-inner">
-    <div class="api-guide-item">
-      <strong>🔑 API 키란 무엇인가요?</strong>
-      이 에이전트는 Groq AI를 사용합니다. 무료로 이용하려면 본인의 API 키가 필요해요. 키는 개인 계정에 귀속되며 무료로 사용할 수 있습니다.
-    </div>
-    <div class="api-guide-item">
-      <strong>📋 무료 API 키 발급 방법</strong>
-      ① <a href="https://console.groq.com" target="_blank">console.groq.com</a> 접속<br>
-      ② 구글 계정으로 간편 로그인<br>
-      ③ 왼쪽 메뉴 "API Keys" → "Create API Key"<br>
-      ④ 키 복사 후 위 입력창에 붙여넣기
-    </div>
-    <div class="api-guide-item">
-      <strong>⚠ 주의사항</strong>
-      API 키는 비밀번호처럼 소중히 관리하세요.<br>
-      타인과 키를 공유하면 본인의 무료 한도가 소진될 수 있습니다.<br>
-      키는 이 페이지에 저장되지 않으며, 창을 닫으면 사라집니다.
-    </div>
-  </div>
-</div>
 <header>
   <div class="header-icon">🏛</div>
   <div class="header-text">
-    <h1>역사 자료 탐구 AI</h1>
-    <p>한국사 · 세계사 · 142개 자료 사이트 연결</p>
+    <h1>역사 자료 탐구 도구</h1>
+    <p>키워드로 142개 역사 자료 사이트를 한번에 검색 · AI 답변은 Claude.ai 프로젝트 활용</p>
   </div>
-  <div class="header-actions">
-    <div class="site-count">사이트 <span id="siteCountNum">142</span>개</div>
-    <label class="upload-btn" title="엑셀 파일로 사이트 목록 업데이트">
-      📂 목록 업데이트
-      <input type="file" id="xlsxUpload" accept=".xlsx,.xls" onchange="handleExcelUpload(event)"/>
-    </label>
-    <div class="status-dot"></div>
-  </div>
+  <div class="header-badge">사이트 <span>142</span>개</div>
 </header>
 
-<div class="body-wrap">
-  <aside class="sidebar">
-    <div class="sidebar-header">📚 연결된 자료 사이트</div>
-    <div class="cat-tabs" id="catTabs"></div>
-    <div class="site-list" id="siteList"></div>
-    <div class="sidebar-footer">
-      <p class="add-hint">🟢 검색 직접 연결 7개<br>🔵 홈페이지 연결 135개<br><small>(직접 확인 후 작동하는 사이트만 검색 연결)</small><br><br>📂 엑셀 업로드로 추가 가능</p>
-    </div>
-  </aside>
+<nav class="nav-tabs">
+  <button class="nav-tab active" onclick="showPage('search')">🔍 사이트 검색</button>
+  <button class="nav-tab" onclick="showPage('claude')">🤖 AI 답변 받기</button>
+  <button class="nav-tab" onclick="showPage('guide')">📖 사용 안내</button>
+</nav>
 
-  <div class="chat-wrap">
-    <div id="chat">
-      <div class="welcome" id="welcome">
-        <span class="welcome-seal">📜</span>
-        <h2>역사 자료 탐구 AI</h2>
-        <p>한국사부터 세계사까지, 궁금한 인물·사건을 질문하세요.<br>AI 답변과 함께 142개 자료 사이트 링크를 제공합니다.</p>
-        <div class="suggestion-grid">
-          <button class="suggestion-btn" onclick="sendSuggestion('이순신 장군에 대해 알려줘')"><span class="emoji">⚓</span>이순신 장군 알려줘</button>
-          <button class="suggestion-btn" onclick="sendSuggestion('임진왜란이 일어난 배경은?')"><span class="emoji">🔥</span>임진왜란 배경</button>
-          <button class="suggestion-btn" onclick="sendSuggestion('세종대왕의 주요 업적을 정리해줘')"><span class="emoji">📚</span>세종대왕 업적</button>
-          <button class="suggestion-btn" onclick="sendSuggestion('3.1 운동에 대해 자세히 설명해줘')"><span class="emoji">🕊</span>3.1 운동 설명</button>
-        </div>
-      </div>
+<!-- ══════════════════════════════════════════
+     페이지 1: 사이트 검색
+══════════════════════════════════════════ -->
+<div class="page active" id="page-search">
+
+  <div class="card">
+    <div class="card-title">🔍 키워드 검색</div>
+    <div class="search-row">
+      <input class="search-input" id="searchInput" placeholder="예: 이순신, 임진왜란, 조선시대, Yi Sun-sin..." onkeydown="if(event.key==='Enter')doSearch()"/>
+      <button class="btn-gold" onclick="doSearch()">검색하기</button>
+      <button class="btn-dim" onclick="clearSearch()">초기화</button>
     </div>
-    <!-- 카테고리 필터 패널 -->
-    <div class="cat-filter-area">
-      <div class="cat-filter-label">🗂 검색할 자료 사이트 카테고리 선택 (선택한 카테고리만 링크 표시)</div>
-      <div class="cat-filter-grid" id="catFilterGrid"></div>
-      <div class="cat-filter-actions">
-        <button class="cat-action-btn" onclick="selectAllCats()">전체 선택</button>
-        <button class="cat-action-btn" onclick="clearAllCats()">전체 해제</button>
-        <button class="cat-action-btn" onclick="selectKoreanOnly()">한국사만</button>
-      </div>
+    <div class="kw-langs" id="kwLangs" style="display:none;"></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">🗂 카테고리 필터</div>
+    <div class="filter-grid" id="filterGrid"></div>
+    <div class="filter-actions">
+      <button class="filter-action" onclick="selectAll()">전체 선택</button>
+      <button class="filter-action" onclick="clearAll()">전체 해제</button>
+      <button class="filter-action" onclick="selectKorean()">한국사만</button>
+      <button class="filter-action" onclick="selectEast()">동아시아만</button>
+      <button class="filter-action" onclick="selectWest()">서구·미국만</button>
     </div>
 
-    <div class="input-area">
-      <div class="input-wrapper">
-        <textarea id="input" placeholder="예: 광개토대왕의 정복 활동을 알려줘" rows="1"></textarea>
-        <button id="sendBtn" onclick="sendMessage()">➤</button>
+    <div class="legend">
+      <div class="legend-item"><div class="legend-dot dot-search"></div>검색 결과 바로 연결</div>
+      <div class="legend-item"><div class="legend-dot dot-home"></div>홈페이지 연결 (직접 검색 필요)</div>
+    </div>
+
+    <div class="sites-header">
+      <div class="sites-count">표시 중: <b id="showCount">0</b>개</div>
+    </div>
+    <div class="sites-grid" id="sitesGrid"></div>
+    <div class="empty" id="emptyMsg" style="display:none;">선택된 카테고리가 없어요. 위에서 카테고리를 선택해주세요.</div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     페이지 2: AI 답변 (Claude 프롬프트)
+══════════════════════════════════════════ -->
+<div class="page" id="page-claude">
+  <div class="card">
+    <div class="card-title">🤖 Claude AI로 역사 답변 받기</div>
+    <p style="font-size:13px;color:var(--text-muted);line-height:1.8;margin-bottom:18px;">
+      이 도구는 API 없이 사이트 링크만 제공해요. AI 답변은 <b style="color:var(--gold-light)">Claude.ai</b>를 활용하면 무료로 받을 수 있어요.<br>
+      아래 프롬프트(지시문)를 Claude.ai 프로젝트에 한 번만 설정해두면, 이후 질문할 때마다 자동으로 상세한 역사 답변 + 자료 사이트 링크를 함께 제공받을 수 있어요.
+    </p>
+
+    <div class="prompt-steps">
+      <div class="prompt-step">
+        <div class="step-num">1</div>
+        <div class="step-text"><b>Claude.ai 접속</b>아래 링크를 눌러 Claude.ai에 접속하세요. 무료 계정으로도 사용 가능해요.</div>
       </div>
-      <div class="input-hint">Enter로 전송 · Shift+Enter로 줄바꿈</div>
+      <div class="prompt-step">
+        <div class="step-num">2</div>
+        <div class="step-text"><b>프로젝트 만들기</b>왼쪽 사이드바 → Projects → New Project → 이름: "역사 자료 탐구 AI"</div>
+      </div>
+      <div class="prompt-step">
+        <div class="step-num">3</div>
+        <div class="step-text"><b>지시문 붙여넣기</b>아래 "지시문 복사" 버튼 클릭 → 프로젝트 설정의 Custom Instructions에 붙여넣기</div>
+      </div>
+      <div class="prompt-step">
+        <div class="step-num">4</div>
+        <div class="step-text"><b>바로 사용!</b>프로젝트 안에서 새 채팅 열고 역사 질문을 입력하면 상세한 답변 + 자료 링크를 받을 수 있어요.</div>
+      </div>
+    </div>
+
+    <button class="copy-btn" id="copyBtn" onclick="copyPrompt()">📋 지시문 복사하기</button>
+    <a class="claude-link" href="https://claude.ai" target="_blank">🔗 Claude.ai 바로가기 →</a>
+  </div>
+
+  <div class="card">
+    <div class="card-title">💡 Claude.ai 프로젝트 설정 방법 (상세)</div>
+    <div style="font-size:12px;color:var(--text-muted);line-height:2;">
+      <ol class="guide-ol">
+        <li><b>claude.ai</b> 접속 후 로그인 (구글 계정으로 간편 가입 가능)</li>
+        <li>왼쪽 사이드바에서 <b>Projects</b> 클릭</li>
+        <li><b>New Project</b> 클릭 → 프로젝트 이름 입력 (예: 역사 자료 탐구 AI)</li>
+        <li>프로젝트 페이지에서 <b>⚙️ Project Settings</b> 또는 <b>Edit</b> 클릭</li>
+        <li><b>Custom Instructions</b> 칸에 복사한 지시문 붙여넣기</li>
+        <li>저장 후 프로젝트 안에서 <b>New Chat</b> 열기</li>
+        <li>역사 인물, 사건, 시대를 자유롭게 질문하세요!</li>
+      </ol>
     </div>
   </div>
 </div>
 
+<!-- ══════════════════════════════════════════
+     페이지 3: 사용 안내
+══════════════════════════════════════════ -->
+<div class="page" id="page-guide">
+
+  <!-- 이 도구 사용법 -->
+  <div class="card">
+    <div class="card-title">📖 이 도구 사용 방법</div>
+
+    <div class="guide-tip">
+      <b>💡 핵심 사용 흐름</b><br>
+      ① <b>이 페이지(사이트 검색 탭)</b>에서 키워드 입력 → 관련 자료 사이트 링크 클릭 → 원문 확인<br>
+      ② <b>Claude.ai 프로젝트</b>에서 같은 키워드 질문 → AI가 내용 정리 + 자료 사이트 링크 제공<br>
+      두 가지를 함께 활용하면 가장 효율적으로 역사 자료를 탐구할 수 있어요.
+    </div>
+
+    <div class="guide-grid">
+      <div class="guide-card">
+        <div class="guide-card-title">🔍 키워드 입력 방법</div>
+        <div class="guide-card-body">
+          인물명, 사건명, 시대명을 입력하면 돼요.<br><br>
+          <b>예시:</b><br>
+          · 이순신 / 세종대왕 / 광개토대왕<br>
+          · 임진왜란 / 3.1운동 / 한국전쟁<br>
+          · 조선시대 / 고려 / 신라<br>
+          · Yi Sun-sin (영어도 가능)<br><br>
+          입력 후 <b>Enter</b> 또는 <b>검색하기</b> 버튼을 누르면 해당 키워드로 각 사이트 검색 결과에 연결되는 버튼들이 나타나요.
+        </div>
+      </div>
+      <div class="guide-card">
+        <div class="guide-card-title">🟢 검색 연결 vs 🔵 홈페이지 연결</div>
+        <div class="guide-card-body">
+          <b>🟢 초록색 (검색 연결):</b><br>
+          버튼을 클릭하면 입력한 키워드로 검색된 결과 페이지로 바로 이동해요.<br><br>
+          <b>🔵 파란색 (홈페이지 연결):</b><br>
+          해당 사이트 구조상 URL로 검색이 불가능해요. 클릭하면 사이트 메인 페이지로 이동하니, 거기서 직접 검색창에 키워드를 입력하세요.<br><br>
+          <b>왜 차이가 나나요?</b><br>
+          일부 사이트는 보안 또는 구조적 이유로 URL만으로 검색이 안 돼요. 이런 사이트는 홈페이지 링크만 제공하고 직접 검색을 안내해요.
+        </div>
+      </div>
+      <div class="guide-card">
+        <div class="guide-card-title">🗂 카테고리 필터 활용법</div>
+        <div class="guide-card-body">
+          142개 사이트가 많게 느껴지면 카테고리 필터로 줄일 수 있어요.<br><br>
+          <b>한국사 연구:</b> "한국사만" 버튼 클릭<br>
+          <b>임진왜란 연구:</b> 한국사 + 일본 선택<br>
+          <b>독립운동 연구:</b> 한국사 + 일본 + 미국 선택<br>
+          <b>세계대전 연구:</b> 영국 + 프랑스 + 독일 선택<br><br>
+          필요한 카테고리만 켜두면 관련 사이트만 표시돼서 훨씬 빠르게 찾을 수 있어요.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 사이트별 검색 방법 안내 -->
+  <div class="card">
+    <div class="card-title">🗺 주요 사이트별 검색 방법</div>
+
+    <div class="guide-section-title" style="margin-bottom:14px;">📚 한국 주요 사이트</div>
+
+    <div class="guide-grid">
+      <div class="guide-card">
+        <div class="guide-card-title">📚 국사편찬위원회 한국사DB</div>
+        <div class="guide-card-body">
+          <b>주소:</b> db.history.go.kr<br>
+          <b>특징:</b> 삼국사기, 고려사, 조선왕조실록 등 한국 핵심 사료 원문 수록<br><br>
+          <b>검색 방법:</b><br>
+          ① 상단 검색창에 키워드 입력<br>
+          ② 시대·분류별 필터 활용<br>
+          ③ 원문과 번역문을 나란히 볼 수 있어요<br><br>
+          <b>활용 팁:</b> "연대별 검색"으로 특정 시기 사건을 시간순으로 찾을 수 있어요.
+        </div>
+      </div>
+      <div class="guide-card">
+        <div class="guide-card-title">📜 한국고전종합DB</div>
+        <div class="guide-card-body">
+          <b>주소:</b> db.itkc.or.kr<br>
+          <b>특징:</b> 조선시대 문집, 문학, 철학 원문 및 번역문<br><br>
+          <b>검색 방법:</b><br>
+          ① 상단 통합검색에 키워드 입력<br>
+          ② 서명(책 이름)·저자·내용으로 구분 검색 가능<br>
+          ③ 한문 원문과 한글 번역 동시 열람 가능<br><br>
+          <b>활용 팁:</b> 인물 이름으로 검색하면 그 인물이 쓴 글이나 그에 관한 기록을 모두 찾을 수 있어요.
+        </div>
+      </div>
+      <div class="guide-card">
+        <div class="guide-card-title">🏛 규장각 한국학연구원</div>
+        <div class="guide-card-body">
+          <b>주소:</b> kyu.snu.ac.kr<br>
+          <b>특징:</b> 조선 왕실 고문서·지도·의궤 등 희귀 자료<br><br>
+          <b>검색 방법:</b><br>
+          ① 통합검색 또는 원문자료 검색 선택<br>
+          ② 자료 유형(고문서·지도·책)별 검색 가능<br>
+          ③ 이미지로 원본 스캔본 열람 가능<br><br>
+          <b>활용 팁:</b> 조선시대 지도나 왕실 행사 기록(의궤)을 찾을 때 특히 유용해요.
+        </div>
+      </div>
+      <div class="guide-card">
+        <div class="guide-card-title">🗞 네이버 뉴스라이브러리</div>
+        <div class="guide-card-body">
+          <b>주소:</b> newslibrary.naver.com<br>
+          <b>특징:</b> 1920년대~2000년대 신문 기사 원본 이미지<br><br>
+          <b>검색 방법:</b><br>
+          ① 키워드 입력 후 검색<br>
+          ② 신문사·날짜 범위 설정 가능<br>
+          ③ 신문 지면 이미지를 직접 볼 수 있어요<br><br>
+          <b>활용 팁:</b> 특정 사건이 당시 신문에 어떻게 보도됐는지 확인하는 데 최적이에요.
+        </div>
+      </div>
+      <div class="guide-card">
+        <div class="guide-card-title">🏅 공훈전자사료관</div>
+        <div class="guide-card-body">
+          <b>주소:</b> e-gonghun.mpva.go.kr<br>
+          <b>특징:</b> 독립운동가 공훈 기록, 판결문, 심문조서 원문<br><br>
+          <b>검색 방법:</b><br>
+          ① 인물 이름으로 검색<br>
+          ② 독립운동 유형·지역·시기별 검색 가능<br>
+          ③ 공훈록, 판결문 원문 PDF 다운로드 가능<br><br>
+          <b>활용 팁:</b> 독립운동가의 실제 재판 기록과 심문 내용을 원문으로 볼 수 있어요.
+        </div>
+      </div>
+      <div class="guide-card">
+        <div class="guide-card-title">🗂 국가기록원</div>
+        <div class="guide-card-body">
+          <b>주소:</b> archives.go.kr<br>
+          <b>특징:</b> 대한민국 정부 수립 이후 공식 행정 기록<br><br>
+          <b>검색 방법:</b><br>
+          ① 기록물 검색 메뉴 선택<br>
+          ② 키워드·생산 기관·시기별 검색<br>
+          ③ 공개 기록물은 원문 열람 가능<br><br>
+          <b>활용 팁:</b> 현대사(1948년 이후) 정부 정책, 사건 관련 공식 문서를 찾을 때 활용하세요.
+        </div>
+      </div>
+    </div>
+
+    <div class="guide-section-title" style="margin-bottom:14px;margin-top:8px;">🌏 일본·중국 사이트</div>
+
+    <div class="guide-grid">
+      <div class="guide-card">
+        <div class="guide-card-title">🇯🇵 일본 국립국회도서관 디지털콜렉션</div>
+        <div class="guide-card-body">
+          <b>주소:</b> dl.ndl.go.jp<br>
+          <b>특징:</b> 일본 고문서·근대 문헌·신문 디지털화 자료<br><br>
+          <b>검색 방법:</b><br>
+          ① 일본어 키워드로 검색 (한자 사용 권장)<br>
+          ② 언어·시대·자료 유형 필터 활용<br>
+          ③ 일부 자료는 관내 한정이지만, 많은 자료가 온라인 공개돼 있어요<br><br>
+          <b>활용 팁:</b> 임진왜란 관련 일본 측 기록을 찾을 때 "壬辰倭乱" 또는 "文禄の役"로 검색하세요.
+        </div>
+      </div>
+      <div class="guide-card">
+        <div class="guide-card-title">🇯🇵 아시아역사자료센터 JACAR</div>
+        <div class="guide-card-body">
+          <b>주소:</b> jacar.go.jp<br>
+          <b>특징:</b> 근현대 일본 외교·군사 공문서 원문<br><br>
+          <b>검색 방법:</b><br>
+          ① 검색창에 일본어 키워드 입력<br>
+          ② 레퍼런스코드로 문서 직접 검색 가능<br>
+          ③ 고해상도 스캔 이미지 무료 열람<br><br>
+          <b>활용 팁:</b> 일제강점기 조선 관련 일본 정부 공문서를 찾을 때 매우 유용해요. "朝鮮"으로 검색해보세요.
+        </div>
+      </div>
+      <div class="guide-card">
+        <div class="guide-card-title">🇨🇳 CNKI 중국지망</div>
+        <div class="guide-card-body">
+          <b>주소:</b> cnki.net<br>
+          <b>특징:</b> 중국 학술논문·고문헌 최대 데이터베이스<br><br>
+          <b>검색 방법:</b><br>
+          ① 중국어(간체) 키워드로 검색<br>
+          ② 논문·고적·신문 탭 선택<br>
+          ③ 일부 자료는 유료이나 초록은 무료 확인 가능<br><br>
+          <b>활용 팁:</b> 한국 관련 중국 측 사료를 찾을 때 "高丽"(고려), "朝鲜"(조선)으로 검색하세요.
+        </div>
+      </div>
+    </div>
+
+    <div class="guide-section-title" style="margin-bottom:14px;margin-top:8px;">🌍 서구 주요 사이트</div>
+
+    <div class="guide-grid">
+      <div class="guide-card">
+        <div class="guide-card-title">🇬🇧 영국 국립문서보관소 TNA</div>
+        <div class="guide-card-body">
+          <b>주소:</b> nationalarchives.gov.uk<br>
+          <b>특징:</b> 영국 정부 공문서·외교 전문·식민지 기록<br><br>
+          <b>검색 방법:</b><br>
+          ① Discovery 검색 시스템 이용<br>
+          ② 영어 키워드 + 날짜 범위 설정<br>
+          ③ 문서 목록 확인 후 원문 요청 또는 온라인 열람<br><br>
+          <b>활용 팁:</b> 한국 관련 영국 외교 문서는 "Korea", "Corea" 등으로 검색하면 찾을 수 있어요.
+        </div>
+      </div>
+      <div class="guide-card">
+        <div class="guide-card-title">🇫🇷 프랑스 국립도서관 Gallica</div>
+        <div class="guide-card-body">
+          <b>주소:</b> gallica.bnf.fr<br>
+          <b>특징:</b> 프랑스 고문헌·신문·지도·사진 디지털화<br><br>
+          <b>검색 방법:</b><br>
+          ① 프랑스어 또는 영어 키워드 검색<br>
+          ② 자료 유형(책·신문·사진·지도) 필터<br>
+          ③ 대부분 무료 열람 가능<br><br>
+          <b>활용 팁:</b> 19세기 조선을 방문한 프랑스 선교사 기록을 "Corée" 또는 "Joseon"으로 검색하면 찾을 수 있어요.
+        </div>
+      </div>
+      <div class="guide-card">
+        <div class="guide-card-title">🇺🇸 미국 의회도서관 LOC</div>
+        <div class="guide-card-body">
+          <b>주소:</b> loc.gov<br>
+          <b>특징:</b> 미국 최대 도서관·지도·사진·역사 문서<br><br>
+          <b>검색 방법:</b><br>
+          ① 영어 키워드로 전체 검색<br>
+          ② 자료 유형·날짜·주제별 필터<br>
+          ③ 디지털화된 자료는 무료 다운로드 가능<br><br>
+          <b>활용 팁:</b> 한국전쟁 관련 사진과 문서를 "Korean War" 또는 "Korea 1950"으로 검색하면 방대한 자료를 찾을 수 있어요.
+        </div>
+      </div>
+      <div class="guide-card">
+        <div class="guide-card-title">🌐 인터넷 아카이브</div>
+        <div class="guide-card-body">
+          <b>주소:</b> archive.org<br>
+          <b>특징:</b> 절판 도서·옛 웹페이지·영상·음성 자료 보관<br><br>
+          <b>검색 방법:</b><br>
+          ① 영어 키워드로 검색<br>
+          ② 텍스트·비디오·오디오·소프트웨어 탭 선택<br>
+          ③ 거의 모든 자료 무료 열람·다운로드 가능<br><br>
+          <b>활용 팁:</b> 오래된 책이나 절판 도서를 찾을 때 특히 유용해요. "Wayback Machine"으로 과거 웹사이트도 볼 수 있어요.
+        </div>
+      </div>
+      <div class="guide-card">
+        <div class="guide-card-title">🇩🇪 독일 디지털도서관 DDB</div>
+        <div class="guide-card-body">
+          <b>주소:</b> deutsche-digitale-bibliothek.de<br>
+          <b>특징:</b> 독일 문화유산·문서·예술작품 통합 검색<br><br>
+          <b>검색 방법:</b><br>
+          ① 독일어 또는 영어 키워드로 검색<br>
+          ② 기관·시대·자료 유형별 필터<br>
+          ③ 원문 이미지 무료 열람<br><br>
+          <b>활용 팁:</b> 독일과 한국의 역사적 접점(예: 하인리히 하멜, 독일 선교사 기록)을 찾을 때 유용해요.
+        </div>
+      </div>
+      <div class="guide-card">
+        <div class="guide-card-title">📰 Chronicling America (미국 역사 신문)</div>
+        <div class="guide-card-body">
+          <b>주소:</b> chroniclingamerica.loc.gov<br>
+          <b>특징:</b> 1770~1963년 미국 역사 신문 디지털화<br><br>
+          <b>검색 방법:</b><br>
+          ① 영어 키워드 입력<br>
+          ② 날짜 범위·주(州)·신문사 필터<br>
+          ③ 신문 지면 이미지 무료 열람<br><br>
+          <b>활용 팁:</b> 19~20세기 초 한국 관련 미국 신문 보도를 "Korea", "Chosen"으로 검색하면 찾을 수 있어요.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 자료 활용 팁 -->
+  <div class="card">
+    <div class="card-title">💡 원문 자료 효과적으로 활용하는 방법</div>
+
+    <table class="guide-table">
+      <tr>
+        <th>연구 주제</th>
+        <th>추천 사이트</th>
+        <th>검색 팁</th>
+      </tr>
+      <tr>
+        <td><b>조선시대 인물</b></td>
+        <td>한국고전종합DB, 규장각, 국사편찬위원회 한국사DB</td>
+        <td>인물명 + "문집" 또는 "실록"으로 검색</td>
+      </tr>
+      <tr>
+        <td><b>독립운동</b></td>
+        <td>공훈전자사료관, 독립기념관, 국가기록원, JACAR</td>
+        <td>인물명 또는 사건명으로 한국·일본 측 자료 교차 확인</td>
+      </tr>
+      <tr>
+        <td><b>한국전쟁</b></td>
+        <td>국가기록원, 미국 국립문서보관소, 미국 의회도서관</td>
+        <td>"Korean War" + 날짜 범위로 검색</td>
+      </tr>
+      <tr>
+        <td><b>고대·삼국시대</b></td>
+        <td>국사편찬위원회 한국사DB, 규장각, 중국 국가도서관</td>
+        <td>한자 표기로 검색 (고구려: 高句麗, 신라: 新羅)</td>
+      </tr>
+      <tr>
+        <td><b>근대 외교</b></td>
+        <td>영국 국립문서보관소, JACAR, 미국 국립문서보관소, Gallica</td>
+        <td>영어·일본어·프랑스어 병행 검색으로 다국적 시각 비교</td>
+      </tr>
+      <tr>
+        <td><b>세계사 인물·사건</b></td>
+        <td>각국 국립도서관, 인터넷 아카이브, 구글 북스</td>
+        <td>해당 국가 언어로 검색 + Wikipedia에서 다른 언어 표기 확인</td>
+      </tr>
+    </table>
+
+    <div class="guide-tip">
+      <b>🔑 원문 읽기가 어려울 때</b><br>
+      한문·일본어·프랑스어 등 원문을 읽기 어려울 때는 Claude.ai에 원문 이미지나 텍스트를 붙여넣고 번역·해석을 요청해보세요. "이 한문 원문을 현대 한국어로 번역하고 내용을 설명해줘"와 같이 질문하면 도움을 받을 수 있어요.
+    </div>
+
+    <div class="guide-tip">
+      <b>📌 회원제 사이트 안내</b><br>
+      일부 사이트(영국 신문문서보관소 등)는 유료 회원제로 운영돼요. 그런 경우 대학 도서관을 통해 무료로 접근할 수 있는 경우가 많으니 소속 기관의 도서관 데이터베이스를 확인해보세요.
+    </div>
+  </div>
+
+</div><!-- end page-guide -->
+
+<!-- TOAST -->
+<div class="toast" id="toast" style="display:none;"></div>
+
 <script>
-// ── 142개 전체 사이트 데이터 ──
+// ── 사이트 데이터 (직접 확인된 것만 검색연결, 나머지 홈페이지) ──
 const SITES = [
+  // 한국사
   {cat:"한국사",name:"경상대 문천각 남명학고문헌시스템",url:"http://nmh.gnu.ac.kr/",search:null},
   {cat:"한국사",name:"고려대 해외한국학자료센터",url:"http://kostma.korea.ac.kr/",search:null},
   {cat:"한국사",name:"공훈전자사료관",url:"https://e-gonghun.mpva.go.kr/user/index.do",search:"https://e-gonghun.mpva.go.kr/user/ContribuReportList.do?goTocode=20001&searchNm={k}"},
@@ -276,437 +570,298 @@ const SITES = [
   {cat:"한국사",name:"한국국학진흥원 유교네트",url:"http://www.ugyo.net/",search:null},
   {cat:"한국사",name:"한국역사정보통합시스템",url:"https://www.koreanhistory.or.kr",search:null},
   {cat:"한국사",name:"한국학진흥사업성과포털",url:"http://waks.aks.ac.kr/",search:null},
-  {cat:"인접국 역사 - 중국",name:"국학망",url:"http://www.guoxue.com/",search:null},
-  {cat:"인접국 역사 - 중국",name:"베이징대학도서관",url:"https://www.lib.pku.edu.cn/",search:null},
-  {cat:"인접국 역사 - 중국",name:"중국 국가도서관·전자도서관",url:"http://www.nlc.cn/",search:null},
-  {cat:"인접국 역사 - 중국",name:"중국사회과학원",url:"http://www.cssn.cn/",search:null},
-  {cat:"인접국 역사 - 중국",name:"중국 역대묘지전자자료관(浙江大學)",url:"http://csid.zju.edu.cn/tomb/",search:null},
-  {cat:"인접국 역사 - 중국",name:"중국지망知网 CNKI",url:"https://www.cnki.net/",search:null},
-  {cat:"인접국 역사 - 중국",name:"중국학술망",url:"http://www.cnxueshu.cn/",search:null},
-  {cat:"인접국 역사 - 중국",name:"IDP(국제돈황프로젝트)",url:"http://idp.bl.uk/",search:null},
-  {cat:"인접국 역사 - 타이완",name:"타이완 교육부이체자자전",url:"https://dict.variants.moe.edu.tw/variants/rbt/home.do",search:null},
-  {cat:"인접국 역사 - 타이완",name:"타이완인문사회과학인문색인자료고",url:"https://tci.ncl.edu.tw/cgi-bin/",search:null},
-  {cat:"인접국 역사 - 타이완",name:"중앙연구원한적전자문헌자료고",url:"https://hanji.sinica.edu.tw/",search:null},
-  {cat:"인접국 역사 - 타이완",name:"airitilibrary(華藝線上圖書館)",url:"https://www.airitilibrary.com/",search:null},
-  {cat:"인접국 역사 - 일본",name:"가쿠슈인대학 동양문화연구소 우방문고",url:"https://www.gakushuin.ac.jp/univ/rioc/",search:null},
-  {cat:"인접국 역사 - 일본",name:"교토대학 귀중자료 디지털아카이브",url:"https://rmda.kulib.kyoto-u.ac.jp/",search:null},
-  {cat:"인접국 역사 - 일본",name:"국립공문서관 아시아역사자료센터",url:"https://www.jacar.go.jp/",search:null},
-  {cat:"인접국 역사 - 일본",name:"도요분코(동양문고)",url:"http://www.toyo-bunko.or.jp/",search:null},
-  {cat:"인접국 역사 - 일본",name:"도쿄대학 학술자산등아카이브포탈",url:"https://da.dl.itc.u-tokyo.ac.jp/portal/",search:null},
-  {cat:"인접국 역사 - 일본",name:"일본 국립국회도서관 디지털콜렉션",url:"https://dl.ndl.go.jp/ja/",search:"https://dl.ndl.go.jp/search?keyword={k}"},
-  {cat:"인접국 역사 - 일본",name:"CiNii(NII학술정보내비게이트)",url:"https://cir.nii.ac.jp/",search:"https://cir.nii.ac.jp/all?q={k}"},
-  {cat:"서구 역사 - 영국",name:"동인도회사 East India Company(회원제)",url:"https://www.eastindiacompany.amdigital.co.uk/",search:null},
-  {cat:"서구 역사 - 영국",name:"스코틀랜드 마녀사냥 데이터베이스",url:"http://witches.shca.ed.ac.uk",search:null},
-  {cat:"서구 역사 - 영국",name:"스코틀랜드 국립도서관",url:"https://digital.nls.uk/gallery",search:null},
-  {cat:"서구 역사 - 영국",name:"영국 신문문서보관소(회원제)",url:"https://www.britishnewspaperarchive.co.uk/",search:null},
-  {cat:"서구 역사 - 영국",name:"영국 의회문서보관소",url:"https://archives.parliament.uk/our-collections/",search:null},
-  {cat:"서구 역사 - 영국",name:"영국 의회의사록 Hansard",url:"https://hansard.parliament.uk/",search:"https://hansard.parliament.uk/search?searchTerm={k}"},
-  {cat:"서구 역사 - 영국",name:"영국 국립도서관 The British Library",url:"https://www.bl.uk/",search:null},
-  {cat:"서구 역사 - 영국",name:"영국 국립문서보관소 The National Archives",url:"https://www.nationalarchives.gov.uk/",search:"https://discovery.nationalarchives.gov.uk/results/r?_q={k}"},
-  {cat:"서구 역사 - 영국",name:"옥스포드 텍스트아카이브",url:"https://ota.bodleian.ox.ac.uk/repository/xmlui/",search:null},
-  {cat:"서구 역사 - 영국",name:"웨일스 국립도서관",url:"https://www.library.wales/",search:null},
-  {cat:"서구 역사 - 영국",name:"Georgian Papers Online",url:"https://gpp.rct.uk/",search:null},
-  {cat:"서구 역사 - 영국",name:"프로젝트 캔터베리 성공회 문서보관소",url:"http://anglicanhistory.org/",search:null},
-  {cat:"서구 역사 - 프랑스",name:"국방역사박물관 SHD",url:"https://www.servicehistorique.sga.defense.gouv.fr/",search:null},
-  {cat:"서구 역사 - 프랑스",name:"그르노블 지방 도서관",url:"https://pagella.bm-grenoble.fr/pagella/fr/content/accueil-fr",search:null},
-  {cat:"서구 역사 - 프랑스",name:"노동계급 국립문서보관소",url:"https://archives-nationales-travail.culture.gouv.fr/",search:null},
-  {cat:"서구 역사 - 프랑스",name:"방데 지역 문서보관소",url:"http://recherche-archives.vendee.fr",search:null},
-  {cat:"서구 역사 - 프랑스",name:"소르본 문화유산 디지털 대학도서관",url:"https://patrimoine.sorbonne-universite.fr/",search:null},
-  {cat:"서구 역사 - 프랑스",name:"양시앙레짐 신문 Le gazetier universel",url:"https://gazetier-universel.gazettes18e.fr/",search:null},
-  {cat:"서구 역사 - 프랑스",name:"외교디지털문서보관소",url:"https://bibliotheque-numerique.diplomatie.gouv.fr/",search:null},
-  {cat:"서구 역사 - 프랑스",name:"중세사료디지털도서관 BVMM",url:"https://bvmm.irht.cnrs.fr/",search:null},
-  {cat:"서구 역사 - 프랑스",name:"툴루즈 문화유산 디지털도서관",url:"https://rosalis.bibliotheque.toulouse.fr/",search:null},
-  {cat:"서구 역사 - 프랑스",name:"파리시 문서보관소 Archives de Paris",url:"https://archives.paris.fr/r/123/archives-numerisees/",search:null},
-  {cat:"서구 역사 - 프랑스",name:"파리시 문화유산 도서관",url:"https://bibliotheques-specialisees.paris.fr/accueil",search:null},
-  {cat:"서구 역사 - 프랑스",name:"프랑스 국립문서보관소",url:"https://www.siv.archives-nationales.culture.gouv.fr/",search:null},
-  {cat:"서구 역사 - 프랑스",name:"프랑스 국립도서관 Gallica",url:"https://gallica.bnf.fr/",search:"https://gallica.bnf.fr/Search?q={k}"},
-  {cat:"서구 역사 - 프랑스",name:"프랑스혁명기 의회의사록",url:"https://sul-philologic.stanford.edu/philologic/archparl/",search:null},
-  {cat:"서구 역사 - 프랑스",name:"해외국립문서보관소",url:"https://recherche-anom.culture.gouv.fr/",search:null},
-  {cat:"서구 역사 - 프랑스",name:"혁명기 신문 Le gazetier révolutionnaire",url:"https://gazetier-revolutionnaire.gazettes18e.fr/",search:null},
-  {cat:"서구 역사 - 독일",name:"괴팅겐 디지털화센터",url:"https://gdz.sub.uni-goettingen.de/",search:null},
-  {cat:"서구 역사 - 독일",name:"나치 박해 문서보관소 Arolsen Archives",url:"https://arolsen-archives.org/",search:null},
-  {cat:"서구 역사 - 독일",name:"독일 출판물 모음 디지털도서관",url:"https://www.ag-sdd.de/Webs/agsdd/DE/Home/home_node.html",search:null},
-  {cat:"서구 역사 - 독일",name:"독일 국립도서관 Deutsche National Bibliothek",url:"https://www.dnb.de/EN/Home/home_node.html",search:null},
-  {cat:"서구 역사 - 독일",name:"독일 디지털도서관 Deutsche Digitale Bibliothek",url:"https://www.deutsche-digitale-bibliothek.de/",search:"https://www.deutsche-digitale-bibliothek.de/search?query={k}"},
-  {cat:"서구 역사 - 독일",name:"독일 연방문서보관소 Bundesarchiv",url:"https://www.bundesarchiv.de/EN/Navigation/Home/home.html",search:null},
-  {cat:"서구 역사 - 독일",name:"뮌헨 디지털화센터·디지털도서관",url:"https://www.digitale-sammlungen.de/de",search:null},
-  {cat:"서구·비서구 역사 - 러시아",name:"러시아 국립군사사문서보관소",url:"http://ргвиа.рф/",search:null},
-  {cat:"서구·비서구 역사 - 러시아",name:"러시아 국립극동역사문서보관소",url:"http://rgiadv.ru/",search:null},
-  {cat:"서구·비서구 역사 - 러시아",name:"러시아 국립도서관",url:"https://www.rsl.ru/",search:"https://search.rsl.ru/ru/search#q={k}"},
-  {cat:"서구·비서구 역사 - 러시아",name:"러시아 국립사회정치사문서보관소",url:"http://rgaspi.com/",search:null},
-  {cat:"서구·비서구 역사 - 러시아",name:"러시아 국립역사문서보관소",url:"https://fgurgia.ru/",search:null},
-  {cat:"서구·비서구 역사 - 러시아",name:"러시아 국립현대사문서보관소",url:"http://ргани.рф/",search:null},
-  {cat:"서구·비서구 역사 - 러시아",name:"러시아 연방국립문서보관소",url:"https://statearchive.ru/",search:null},
-  {cat:"서구·비서구 역사 - 이탈리아",name:"나폴리 국가문서보관소",url:"https://www.archiviodistatonapoli.it/",search:null},
-  {cat:"서구·비서구 역사 - 이탈리아",name:"로마 국가문서보관소",url:"https://www.archiviodistatoroma.beniculturali.it/",search:null},
-  {cat:"서구·비서구 역사 - 이탈리아",name:"밀라노 국가문서보관소",url:"https://www.archiviodistatomialno.beniculturali.it/",search:null},
-  {cat:"서구·비서구 역사 - 이탈리아",name:"베네치아 국가문서보관소",url:"https://www.archiviodistatovenezia.it/",search:null},
-  {cat:"서구·비서구 역사 - 이탈리아",name:"피렌체 국가문서보관소",url:"https://archiviodistatofirenze.cultura.gov.it/",search:null},
-  {cat:"서구·비서구 역사 - 네덜란드",name:"국제사회사연구소 IISH",url:"https://iisg.amsterdam/en",search:null},
-  {cat:"서구·비서구 역사 - 네덜란드",name:"네덜란드 국립문서보관소 Nationaal Archief",url:"https://www.nationaalarchief.nl/en",search:null},
-  {cat:"서구·비서구 역사 - 네덜란드",name:"네덜란드어 신문 문서보관소 Delpher",url:"https://www.delpher.nl/",search:null},
-  {cat:"서구·비서구 역사 - 네덜란드",name:"동인도회사 문서보관소 VOC archive",url:"https://sejarah-nusantara.anri.go.id/",search:null},
-  {cat:"서구·비서구 역사 - 스페인",name:"미구엘 데 세르반테스 가상도서관",url:"https://www.cervantesvirtual.com/",search:null},
-  {cat:"서구·비서구 역사 - 스페인",name:"바스크 관련 디지털도서관 Liburuklik",url:"http://www.liburuklik.euskadi.eus/jspui/",search:null},
-  {cat:"서구·비서구 역사 - 스페인",name:"스페인 내전기 여성전투원 관련 디지털자료실",url:"https://www.mujeresenguerra.com/biblioteca-virtual/",search:null},
-  {cat:"서구·비서구 역사 - 스페인",name:"카탈루냐도서관 Biblioteca de Catalunya",url:"https://www.bnc.cat/",search:null},
-  {cat:"서구·비서구 역사 - 스페인",name:"프랑코 피해자 이름 데이터베이스 Todos",url:"https://todoslosnombres.org/",search:null},
-  {cat:"서구·비서구 역사 - 오스트리아",name:"오스트리아 장관회의 프로토콜 디지털판",url:"https://hw.oeaw.ac.at/ministerrat/",search:null},
-  {cat:"서구·비서구 역사 - 오스만·튀르크",name:"오스만 외교 문서관 QhoD",url:"https://qhod.net/context:qhod",search:null},
-  {cat:"서구·비서구 역사 - 포르투갈",name:"포르투갈 국립도서관·문서관",url:"https://www.mdn.pt/pt/biblioteca-arquivo/",search:null},
-  {cat:"서구·비서구 역사 - 포르투갈",name:"포르투갈 국립디지털도서관",url:"https://bndigital.bnportugal.gov.pt/",search:null},
-  {cat:"서구·비서구 역사 - 그리스",name:"Searchable Greek Inscriptions",url:"https://epigraphy.packhum.org/",search:null},
-  {cat:"서구·비서구 역사 - 그리스",name:"디지털 프라그멘타 DFHG",url:"https://www.dfhg-project.org/",search:null},
-  {cat:"서구·비서구 역사 - 미국",name:"Perseus Digital Library",url:"https://www.perseus.tufts.edu/hopper/",search:null},
-  {cat:"서구·비서구 역사 - 미국",name:"국가안보아카이브 NSA",url:"https://nsarchive.gwu.edu/",search:null},
-  {cat:"서구·비서구 역사 - 미국",name:"국립문서보관소 National Archives",url:"https://www.archives.gov/",search:null},
-  {cat:"서구·비서구 역사 - 미국",name:"국무부 역사관 Office of the Historian",url:"https://history.state.gov/",search:null},
-  {cat:"서구·비서구 역사 - 미국",name:"미국 남부 기록 Documenting the American South",url:"https://docsouth.unc.edu/",search:null},
-  {cat:"서구·비서구 역사 - 미국",name:"뉴욕 공립도서관 NYPL",url:"https://digitalcollections.nypl.org/",search:null},
-  {cat:"서구·비서구 역사 - 미국",name:"미국 대통령도서관 The American Presidency Project",url:"https://www.presidency.ucsb.edu/",search:null},
-  {cat:"서구·비서구 역사 - 미국",name:"듀크대학교 도서관",url:"https://repository.duke.edu/dc",search:null},
-  {cat:"서구·비서구 역사 - 미국",name:"매사추세츠 역사협회",url:"https://www.masshist.org/digital-collections",search:null},
-  {cat:"서구·비서구 역사 - 미국",name:"미국 역사 신문 Chronicling America",url:"https://chroniclingamerica.loc.gov/",search:"https://chroniclingamerica.loc.gov/search/pages/results/?andtext={k}"},
-  {cat:"서구·비서구 역사 - 미국",name:"미국 의회도서관 Library of Congress",url:"https://www.loc.gov/collections/",search:"https://www.loc.gov/search/?q={k}"},
-  {cat:"서구·비서구 역사 - 미국",name:"미국 디지털 공공도서관 DPLA",url:"https://dp.la/",search:null},
-  {cat:"서구·비서구 역사 - 미국",name:"시민권 디지털 도서관 Civil Rights Digital Library",url:"https://crdl.usg.edu/",search:null},
-  {cat:"서구·비서구 역사 - 미국",name:"스미소니언 도서관",url:"https://library.si.edu/books_online",search:null},
-  {cat:"서구·비서구 역사 - 중남미",name:"칼리스피어 Calisphere",url:"https://calisphere.org/",search:null},
-  {cat:"서구·비서구 역사 - 중남미",name:"우드로 윌슨 센터 Woodrow Wilson Center",url:"https://digitalarchive.wilsoncenter.org/",search:null},
-  {cat:"서구·비서구 역사 - 중남미",name:"자유를 향해 Freedom On the Move",url:"https://freedomonthemove.org/",search:null},
-  {cat:"서구·비서구 역사 - 중남미",name:"Trans-Atlantic Slave Trade",url:"https://www.slavevoyages.org/",search:null},
-  {cat:"서구·비서구 역사 - 중남미",name:"브라질 국립디지털도서관",url:"http://bndigital.bn.gov.br/",search:null},
-  {cat:"서구·비서구 역사 - 중남미",name:"칠레 국립디지털도서관 Memoria Chilena",url:"https://www.memoriachilena.gob.cl/602/w3-channel.html",search:null},
-  {cat:"서구·비서구 역사 - 중남미",name:"카리브해 디지털도서관",url:"https://dloc.com/collections/fiu",search:null},
-  {cat:"서구·비서구 역사 - 중남미",name:"구글 북스 Google Books",url:"https://books.google.com/",search:"https://www.google.com/search?tbm=bks&q={k}"},
-  {cat:"서구·비서구 역사 - 중남미",name:"온라인 자유 도서관 Online Library of Liberty",url:"https://oll.libertyfund.org/",search:null},
+  // 중국
+  {cat:"인접국 - 중국",name:"국학망",url:"http://www.guoxue.com/",search:null},
+  {cat:"인접국 - 중국",name:"베이징대학도서관",url:"https://www.lib.pku.edu.cn/",search:null},
+  {cat:"인접국 - 중국",name:"중국 국가도서관·전자도서관",url:"http://www.nlc.cn/",search:null},
+  {cat:"인접국 - 중국",name:"중국사회과학원",url:"http://www.cssn.cn/",search:null},
+  {cat:"인접국 - 중국",name:"중국 역대묘지전자자료관(浙江大學)",url:"http://csid.zju.edu.cn/tomb/",search:null},
+  {cat:"인접국 - 중국",name:"중국지망知网 CNKI",url:"https://www.cnki.net/",search:null},
+  {cat:"인접국 - 중국",name:"중국학술망",url:"http://www.cnxueshu.cn/",search:null},
+  {cat:"인접국 - 중국",name:"IDP(국제돈황프로젝트)",url:"http://idp.bl.uk/",search:null},
+  // 타이완
+  {cat:"인접국 - 타이완",name:"타이완 교육부이체자자전",url:"https://dict.variants.moe.edu.tw/variants/rbt/home.do",search:null},
+  {cat:"인접국 - 타이완",name:"타이완인문사회과학인문색인자료고",url:"https://tci.ncl.edu.tw/cgi-bin/",search:null},
+  {cat:"인접국 - 타이완",name:"중앙연구원한적전자문헌자료고",url:"https://hanji.sinica.edu.tw/",search:null},
+  {cat:"인접국 - 타이완",name:"airitilibrary(華藝線上圖書館)",url:"https://www.airitilibrary.com/",search:null},
+  // 일본
+  {cat:"인접국 - 일본",name:"가쿠슈인대학 동양문화연구소 우방문고",url:"https://www.gakushuin.ac.jp/univ/rioc/",search:null},
+  {cat:"인접국 - 일본",name:"교토대학 귀중자료 디지털아카이브",url:"https://rmda.kulib.kyoto-u.ac.jp/",search:null},
+  {cat:"인접국 - 일본",name:"국립공문서관 아시아역사자료센터 JACAR",url:"https://www.jacar.go.jp/",search:null},
+  {cat:"인접국 - 일본",name:"도요분코(동양문고)",url:"http://www.toyo-bunko.or.jp/",search:null},
+  {cat:"인접국 - 일본",name:"도쿄대학 학술자산등아카이브포탈",url:"https://da.dl.itc.u-tokyo.ac.jp/portal/",search:null},
+  {cat:"인접국 - 일본",name:"일본 국립국회도서관 디지털콜렉션",url:"https://dl.ndl.go.jp/ja/",search:"https://dl.ndl.go.jp/search?keyword={k}"},
+  {cat:"인접국 - 일본",name:"CiNii(NII학술정보내비게이트)",url:"https://cir.nii.ac.jp/",search:"https://cir.nii.ac.jp/all?q={k}"},
+  // 영국
+  {cat:"서구 - 영국",name:"동인도회사 East India Company(회원제)",url:"https://www.eastindiacompany.amdigital.co.uk/",search:null},
+  {cat:"서구 - 영국",name:"스코틀랜드 마녀사냥 데이터베이스",url:"http://witches.shca.ed.ac.uk",search:null},
+  {cat:"서구 - 영국",name:"스코틀랜드 국립도서관",url:"https://digital.nls.uk/gallery",search:null},
+  {cat:"서구 - 영국",name:"영국 신문문서보관소(회원제)",url:"https://www.britishnewspaperarchive.co.uk/",search:null},
+  {cat:"서구 - 영국",name:"영국 의회문서보관소",url:"https://archives.parliament.uk/our-collections/",search:null},
+  {cat:"서구 - 영국",name:"영국 의회의사록 Hansard",url:"https://hansard.parliament.uk/",search:"https://hansard.parliament.uk/search?searchTerm={k}"},
+  {cat:"서구 - 영국",name:"영국 국립도서관 The British Library",url:"https://www.bl.uk/",search:null},
+  {cat:"서구 - 영국",name:"영국 국립문서보관소 The National Archives",url:"https://www.nationalarchives.gov.uk/",search:"https://discovery.nationalarchives.gov.uk/results/r?_q={k}"},
+  {cat:"서구 - 영국",name:"옥스포드 텍스트아카이브",url:"https://ota.bodleian.ox.ac.uk/repository/xmlui/",search:null},
+  {cat:"서구 - 영국",name:"웨일스 국립도서관",url:"https://www.library.wales/",search:null},
+  {cat:"서구 - 영국",name:"Georgian Papers Online",url:"https://gpp.rct.uk/",search:null},
+  {cat:"서구 - 영국",name:"프로젝트 캔터베리 성공회 문서보관소",url:"http://anglicanhistory.org/",search:null},
+  // 프랑스
+  {cat:"서구 - 프랑스",name:"국방역사박물관 SHD",url:"https://www.servicehistorique.sga.defense.gouv.fr/",search:null},
+  {cat:"서구 - 프랑스",name:"그르노블 지방 도서관",url:"https://pagella.bm-grenoble.fr/pagella/fr/content/accueil-fr",search:null},
+  {cat:"서구 - 프랑스",name:"노동계급 국립문서보관소",url:"https://archives-nationales-travail.culture.gouv.fr/",search:null},
+  {cat:"서구 - 프랑스",name:"방데 지역 문서보관소",url:"http://recherche-archives.vendee.fr",search:null},
+  {cat:"서구 - 프랑스",name:"소르본 문화유산 디지털 대학도서관",url:"https://patrimoine.sorbonne-universite.fr/",search:null},
+  {cat:"서구 - 프랑스",name:"양시앙레짐 신문 Le gazetier universel",url:"https://gazetier-universel.gazettes18e.fr/",search:null},
+  {cat:"서구 - 프랑스",name:"외교디지털문서보관소",url:"https://bibliotheque-numerique.diplomatie.gouv.fr/",search:null},
+  {cat:"서구 - 프랑스",name:"중세사료디지털도서관 BVMM",url:"https://bvmm.irht.cnrs.fr/",search:null},
+  {cat:"서구 - 프랑스",name:"툴루즈 문화유산 디지털도서관",url:"https://rosalis.bibliotheque.toulouse.fr/",search:null},
+  {cat:"서구 - 프랑스",name:"파리시 문서보관소 Archives de Paris",url:"https://archives.paris.fr/r/123/archives-numerisees/",search:null},
+  {cat:"서구 - 프랑스",name:"파리시 문화유산 도서관",url:"https://bibliotheques-specialisees.paris.fr/accueil",search:null},
+  {cat:"서구 - 프랑스",name:"프랑스 국립문서보관소",url:"https://www.siv.archives-nationales.culture.gouv.fr/",search:null},
+  {cat:"서구 - 프랑스",name:"프랑스 국립도서관 Gallica",url:"https://gallica.bnf.fr/",search:"https://gallica.bnf.fr/Search?q={k}"},
+  {cat:"서구 - 프랑스",name:"프랑스혁명기 의회의사록",url:"https://sul-philologic.stanford.edu/philologic/archparl/",search:null},
+  {cat:"서구 - 프랑스",name:"해외국립문서보관소",url:"https://recherche-anom.culture.gouv.fr/",search:null},
+  {cat:"서구 - 프랑스",name:"혁명기 신문 Le gazetier révolutionnaire",url:"https://gazetier-revolutionnaire.gazettes18e.fr/",search:null},
+  // 독일
+  {cat:"서구 - 독일",name:"괴팅겐 디지털화센터",url:"https://gdz.sub.uni-goettingen.de/",search:null},
+  {cat:"서구 - 독일",name:"나치 박해 문서보관소 Arolsen Archives",url:"https://arolsen-archives.org/",search:null},
+  {cat:"서구 - 독일",name:"독일 출판물 모음 디지털도서관",url:"https://www.ag-sdd.de/Webs/agsdd/DE/Home/home_node.html",search:null},
+  {cat:"서구 - 독일",name:"독일 국립도서관",url:"https://www.dnb.de/EN/Home/home_node.html",search:null},
+  {cat:"서구 - 독일",name:"독일 디지털도서관 Deutsche Digitale Bibliothek",url:"https://www.deutsche-digitale-bibliothek.de/",search:"https://www.deutsche-digitale-bibliothek.de/search?query={k}"},
+  {cat:"서구 - 독일",name:"독일 연방문서보관소 Bundesarchiv",url:"https://www.bundesarchiv.de/EN/Navigation/Home/home.html",search:null},
+  {cat:"서구 - 독일",name:"뮌헨 디지털화센터·디지털도서관",url:"https://www.digitale-sammlungen.de/de",search:null},
+  // 러시아
+  {cat:"비서구 - 러시아",name:"러시아 국립군사사문서보관소",url:"http://ргвиа.рф/",search:null},
+  {cat:"비서구 - 러시아",name:"러시아 국립극동역사문서보관소",url:"http://rgiadv.ru/",search:null},
+  {cat:"비서구 - 러시아",name:"러시아 국립도서관",url:"https://www.rsl.ru/",search:null},
+  {cat:"비서구 - 러시아",name:"러시아 국립사회정치사문서보관소",url:"http://rgaspi.com/",search:null},
+  {cat:"비서구 - 러시아",name:"러시아 국립역사문서보관소",url:"https://fgurgia.ru/",search:null},
+  {cat:"비서구 - 러시아",name:"러시아 국립현대사문서보관소",url:"http://ргани.рф/",search:null},
+  {cat:"비서구 - 러시아",name:"러시아 연방국립문서보관소",url:"https://statearchive.ru/",search:null},
+  // 이탈리아
+  {cat:"비서구 - 이탈리아",name:"나폴리 국가문서보관소",url:"https://www.archiviodistatonapoli.it/",search:null},
+  {cat:"비서구 - 이탈리아",name:"로마 국가문서보관소",url:"https://www.archiviodistatoroma.beniculturali.it/",search:null},
+  {cat:"비서구 - 이탈리아",name:"밀라노 국가문서보관소",url:"https://www.archiviodistatomialno.beniculturali.it/",search:null},
+  {cat:"비서구 - 이탈리아",name:"베네치아 국가문서보관소",url:"https://www.archiviodistatovenezia.it/",search:null},
+  {cat:"비서구 - 이탈리아",name:"피렌체 국가문서보관소",url:"https://archiviodistatofirenze.cultura.gov.it/",search:null},
+  // 네덜란드
+  {cat:"비서구 - 네덜란드",name:"국제사회사연구소 IISH",url:"https://iisg.amsterdam/en",search:null},
+  {cat:"비서구 - 네덜란드",name:"네덜란드 국립문서보관소 Nationaal Archief",url:"https://www.nationaalarchief.nl/en",search:null},
+  {cat:"비서구 - 네덜란드",name:"네덜란드어 신문 문서보관소 Delpher",url:"https://www.delpher.nl/",search:null},
+  {cat:"비서구 - 네덜란드",name:"동인도회사 문서보관소 VOC archive",url:"https://sejarah-nusantara.anri.go.id/",search:null},
+  // 스페인
+  {cat:"비서구 - 스페인",name:"미구엘 데 세르반테스 가상도서관",url:"https://www.cervantesvirtual.com/",search:null},
+  {cat:"비서구 - 스페인",name:"바스크 관련 디지털도서관 Liburuklik",url:"http://www.liburuklik.euskadi.eus/jspui/",search:null},
+  {cat:"비서구 - 스페인",name:"스페인 내전기 여성전투원 디지털자료실",url:"https://www.mujeresenguerra.com/biblioteca-virtual/",search:null},
+  {cat:"비서구 - 스페인",name:"카탈루냐도서관 Biblioteca de Catalunya",url:"https://www.bnc.cat/",search:null},
+  {cat:"비서구 - 스페인",name:"프랑코 피해자 이름 데이터베이스 Todos",url:"https://todoslosnombres.org/",search:null},
+  // 기타 유럽
+  {cat:"기타 유럽",name:"오스트리아 장관회의 프로토콜 디지털판",url:"https://hw.oeaw.ac.at/ministerrat/",search:null},
+  {cat:"기타 유럽",name:"오스만 외교 문서관 QhoD",url:"https://qhod.net/context:qhod",search:null},
+  {cat:"기타 유럽",name:"포르투갈 국립도서관·문서관",url:"https://www.mdn.pt/pt/biblioteca-arquivo/",search:null},
+  {cat:"기타 유럽",name:"포르투갈 국립디지털도서관",url:"https://bndigital.bnportugal.gov.pt/",search:null},
+  {cat:"기타 유럽",name:"Searchable Greek Inscriptions",url:"https://epigraphy.packhum.org/",search:null},
+  {cat:"기타 유럽",name:"디지털 프라그멘타 DFHG",url:"https://www.dfhg-project.org/",search:null},
+  // 미국
+  {cat:"비서구 - 미국",name:"Perseus Digital Library",url:"https://www.perseus.tufts.edu/hopper/",search:null},
+  {cat:"비서구 - 미국",name:"국가안보아카이브 NSA",url:"https://nsarchive.gwu.edu/",search:null},
+  {cat:"비서구 - 미국",name:"국립문서보관소 National Archives",url:"https://www.archives.gov/",search:null},
+  {cat:"비서구 - 미국",name:"국무부 역사관 Office of the Historian",url:"https://history.state.gov/",search:null},
+  {cat:"비서구 - 미국",name:"미국 남부 기록 Documenting the American South",url:"https://docsouth.unc.edu/",search:null},
+  {cat:"비서구 - 미국",name:"뉴욕 공립도서관 NYPL",url:"https://digitalcollections.nypl.org/",search:null},
+  {cat:"비서구 - 미국",name:"미국 대통령도서관 The American Presidency Project",url:"https://www.presidency.ucsb.edu/",search:null},
+  {cat:"비서구 - 미국",name:"듀크대학교 도서관",url:"https://repository.duke.edu/dc",search:null},
+  {cat:"비서구 - 미국",name:"매사추세츠 역사협회",url:"https://www.masshist.org/digital-collections",search:null},
+  {cat:"비서구 - 미국",name:"미국 역사신문 Chronicling America",url:"https://chroniclingamerica.loc.gov/",search:"https://chroniclingamerica.loc.gov/search/pages/results/?andtext={k}"},
+  {cat:"비서구 - 미국",name:"미국 의회도서관 Library of Congress",url:"https://www.loc.gov/collections/",search:"https://www.loc.gov/search/?q={k}"},
+  {cat:"비서구 - 미국",name:"미국 디지털 공공도서관 DPLA",url:"https://dp.la/",search:null},
+  {cat:"비서구 - 미국",name:"시민권 디지털 도서관 Civil Rights Digital Library",url:"https://crdl.usg.edu/",search:null},
+  {cat:"비서구 - 미국",name:"스미소니언 도서관",url:"https://library.si.edu/books_online",search:null},
+  // 중남미
+  {cat:"비서구 - 중남미",name:"칼리스피어 Calisphere",url:"https://calisphere.org/",search:null},
+  {cat:"비서구 - 중남미",name:"우드로 윌슨 센터 Woodrow Wilson Center",url:"https://digitalarchive.wilsoncenter.org/",search:null},
+  {cat:"비서구 - 중남미",name:"자유를 향해 Freedom On the Move",url:"https://freedomonthemove.org/",search:null},
+  {cat:"비서구 - 중남미",name:"Trans-Atlantic Slave Trade",url:"https://www.slavevoyages.org/",search:null},
+  {cat:"비서구 - 중남미",name:"브라질 국립디지털도서관",url:"http://bndigital.bn.gov.br/",search:null},
+  {cat:"비서구 - 중남미",name:"칠레 국립디지털도서관 Memoria Chilena",url:"https://www.memoriachilena.gob.cl/602/w3-channel.html",search:null},
+  {cat:"비서구 - 중남미",name:"카리브해 디지털도서관",url:"https://dloc.com/collections/fiu",search:null},
+  {cat:"비서구 - 중남미",name:"구글 북스 Google Books",url:"https://books.google.com/",search:"https://www.google.com/search?tbm=bks&q={k}"},
+  {cat:"비서구 - 중남미",name:"온라인 자유 도서관 Online Library of Liberty",url:"https://oll.libertyfund.org/",search:null},
+  // 기타 국제
   {cat:"기타 국제",name:"마르크스 인터넷 아카이브",url:"https://www.marxists.org/",search:null},
   {cat:"기타 국제",name:"인터넷 아카이브 Internet Archive",url:"https://archive.org/",search:"https://archive.org/search?query={k}"},
   {cat:"기타 국제",name:"항해고고학 디지털도서관 NautArch",url:"https://www.harbortrust.org/",search:null},
   {cat:"기타 국제",name:"야드 바솀 세계홀로코스트기념관",url:"https://www.yadvashem.org/",search:null},
-  {cat:"기타 국제",name:"선박도서관 ShipLib",url:"https://shiplib.org/",search:null}
+  {cat:"기타 국제",name:"선박도서관 ShipLib",url:"https://shiplib.org/",search:null},
 ];
 
-const CATEGORIES = ["한국사","인접국 역사 - 중국","인접국 역사 - 타이완","인접국 역사 - 일본","서구 역사 - 영국","서구 역사 - 프랑스","서구 역사 - 독일","서구·비서구 역사 - 러시아","서구·비서구 역사 - 이탈리아","서구·비서구 역사 - 네덜란드","서구·비서구 역사 - 스페인","서구·비서구 역사 - 오스트리아","서구·비서구 역사 - 오스만·튀르크","서구·비서구 역사 - 포르투갈","서구·비서구 역사 - 그리스","서구·비서구 역사 - 미국","서구·비서구 역사 - 중남미","기타 국제"];
+const CATS = [...new Set(SITES.map(s=>s.cat))];
+let activeCats = new Set(CATS);
+let currentKw = '';
 
-// ── 카테고리 필터 상태 ──
-let activeCatFilter = new Set(CATEGORIES); // 기본: 전체 선택
+// ── 카테고리 필터 렌더링 ──
+function renderFilter() {
+  document.getElementById('filterGrid').innerHTML = CATS.map(c =>
+    `<button class="filter-btn ${activeCats.has(c)?'on':''}" onclick="toggleCat('${c}',this)">${c.split(' - ').pop()}</button>`
+  ).join('');
+}
 
-function renderCatFilter() {
-  const grid = document.getElementById('catFilterGrid');
-  grid.innerHTML = CATEGORIES.map(c => {
-    const label = c.split(' - ').pop();
-    const on = activeCatFilter.has(c) ? 'on' : '';
-    return `<button class="cat-filter-btn ${on}" onclick="toggleCatFilter('${c}',this)">${label}</button>`;
+function toggleCat(cat, btn) {
+  activeCats.has(cat) ? activeCats.delete(cat) : activeCats.add(cat);
+  btn.classList.toggle('on');
+  renderSites();
+}
+function selectAll(){activeCats=new Set(CATS);renderFilter();renderSites();}
+function clearAll(){activeCats=new Set();renderFilter();renderSites();}
+function selectKorean(){activeCats=new Set(['한국사']);renderFilter();renderSites();}
+function selectEast(){activeCats=new Set(['한국사','인접국 - 중국','인접국 - 타이완','인접국 - 일본']);renderFilter();renderSites();}
+function selectWest(){activeCats=new Set(['서구 - 영국','서구 - 프랑스','서구 - 독일','비서구 - 미국']);renderFilter();renderSites();}
+
+// ── 사이트 렌더링 ──
+function renderSites() {
+  const kw = currentKw;
+  const enc = encodeURIComponent(kw);
+  const filtered = SITES.filter(s => activeCats.has(s.cat));
+  document.getElementById('showCount').textContent = filtered.length;
+
+  if (filtered.length === 0) {
+    document.getElementById('sitesGrid').innerHTML = '';
+    document.getElementById('emptyMsg').style.display = 'block';
+    return;
+  }
+  document.getElementById('emptyMsg').style.display = 'none';
+
+  document.getElementById('sitesGrid').innerHTML = filtered.map(s => {
+    const href = (kw && s.search) ? s.search.replace('{k}', enc) : s.url;
+    const type = s.search ? 'searchable' : 'homepage';
+    const badge = s.search
+      ? '<span class="site-badge badge-s">🔍 검색연결</span>'
+      : '<span class="site-badge badge-h">🏠 홈페이지</span>';
+    return `<a class="site-card ${type}" href="${href}" target="_blank" rel="noopener">
+      <span class="site-icon">📄</span>
+      <span class="site-info">
+        <span class="site-name">${s.name}</span>
+        <span class="site-cat">${s.cat}</span>
+      </span>
+      ${badge}
+    </a>`;
   }).join('');
 }
 
-function toggleCatFilter(cat, btn) {
-  if (activeCatFilter.has(cat)) {
-    activeCatFilter.delete(cat);
-    btn.classList.remove('on');
-  } else {
-    activeCatFilter.add(cat);
-    btn.classList.add('on');
-  }
+// ── 검색 ──
+function doSearch() {
+  const val = document.getElementById('searchInput').value.trim();
+  if (!val) return;
+  currentKw = val;
+
+  // 언어 태그 (간단 표시)
+  const langBox = document.getElementById('kwLangs');
+  langBox.style.display = 'flex';
+  langBox.innerHTML = `
+    <div class="kw-tag">🇰🇷 한국어: <b>${val}</b></div>
+    <div class="kw-tag">🌐 영어: <b>${val}</b> (해외 사이트 직접 번역 검색 권장)</div>
+  `;
+  renderSites();
 }
 
-function selectAllCats() {
-  activeCatFilter = new Set(CATEGORIES);
-  renderCatFilter();
+function clearSearch() {
+  currentKw = '';
+  document.getElementById('searchInput').value = '';
+  document.getElementById('kwLangs').style.display = 'none';
+  renderSites();
 }
 
-function clearAllCats() {
-  activeCatFilter = new Set();
-  renderCatFilter();
+// ── 페이지 탭 ──
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  event.target.classList.add('active');
 }
 
-function selectKoreanOnly() {
-  activeCatFilter = new Set(['한국사']);
-  renderCatFilter();
-}
-
-
-
-const history = []; // Gemini 형식: [{role:'user', parts:[{text}]}, {role:'model', parts:[{text}]}]
-
-const SYSTEM_PROMPT = `당신은 한국사 및 세계사 전문 AI 연구 도우미입니다. 사용자가 역사의 특정 인물, 사건, 시대에 대해 질문하면 대학원 수준의 깊이 있고 풍부한 정보를 제공합니다.
+// ── Claude 프롬프트 복사 ──
+const CLAUDE_PROMPT = `당신은 한국사 및 세계사 전문 AI 연구 도우미입니다. 사용자가 역사 인물, 사건, 시대에 대해 질문하면 대학원 수준의 깊이 있고 풍부한 답변을 제공합니다.
 
 ## 답변 원칙
 - 반드시 한국어로 답변하세요
-- 충분한 분량으로 상세하게 작성하세요 (최소 600자 이상)
+- 전문 용어는 한글로 풀어서 설명하세요
+- 한자어를 단독으로 쓰지 말고 반드시 한글 뜻을 병기하세요
+- 충분한 분량으로 상세하게 작성하세요 (최소 800자 이상)
 - 단순 나열이 아닌 맥락과 해석이 담긴 서술로 작성하세요
-- HTML 태그를 사용해 구조화하세요
+- 웹 검색을 활용해 최신 연구 성과도 반영하세요
 
-## 답변 구성 (아래 항목을 모두 포함하세요)
+## 답변 구성 (모두 포함)
+### 📌 핵심 요약
+### 🏛 배경과 맥락
+### 📖 주요 내용 및 전개
+### ⚔️ 주요 쟁점 또는 다양한 시각
+### 🌏 역사적 의의와 영향
+### 📚 더 알아볼 키워드
 
-<h3>📌 핵심 요약</h3>
-<p>2~3문장으로 핵심을 압축 정리</p>
+⚠ 이 내용은 AI가 정리한 자료입니다. 중요한 연구에는 공식 사료를 직접 확인하시기 바랍니다.
 
-<h3>🏛 배경과 맥락</h3>
-<p>해당 인물/사건이 등장한 역사적·사회적 배경을 상세히 설명. 당시 시대 상황, 정치·경제·문화적 환경 포함</p>
+## 자료 사이트 링크 제공 (필수)
+답변 후 아래 사이트 목록에서 관련성 높은 것들을 골라 링크를 제공하세요.
+키워드는 각 사이트 언어에 맞게 번역해서 URL에 넣으세요.
 
-<h3>📖 주요 내용 및 전개</h3>
-<p>핵심 사실들을 시간 순서 또는 주제별로 상세히 서술. 중요한 사건, 인물 관계, 주요 업적이나 결과를 구체적으로 기술</p>
-<ul><li>항목별로 구체적 사실 포함</li></ul>
+**[키워드 번역]**
+- 🇰🇷 한국어: (원본)
+- 🌐 영어: (번역)
+- 🇯🇵 일본어: (번역)
+- 🇨🇳 중국어: (번역)
 
-<h3>⚔️ 주요 쟁점 또는 다양한 시각</h3>
-<p>역사학계의 다양한 해석이나 논쟁점, 또는 당시 대립했던 세력들의 시각 차이를 설명</p>
+**한국사 자료 (한국어 키워드)**
+- [공훈전자사료관](https://e-gonghun.mpva.go.kr/user/ContribuReportList.do?goTocode=20001&searchNm=한국어키워드)
+- [국립중앙도서관](https://www.nl.go.kr/NL/search/search.do?searchTarget=total&searchKeyword=한국어키워드)
+- [네이버 뉴스라이브러리](https://newslibrary.naver.com/search/searchByKeyword.naver?searchValue=한국어키워드)
+- [독립기념관 한국독립운동정보시스템](https://search.i815.or.kr/Search/SearchList.aspx?searchWord=한국어키워드)
+- [국사편찬위원회 한국사DB](https://db.history.go.kr) ← 직접 검색
+- [한국고전종합DB](https://db.itkc.or.kr) ← 직접 검색
+- [규장각 한국학연구원](https://kyu.snu.ac.kr) ← 직접 검색
+- [국가기록원](https://www.archives.go.kr) ← 직접 검색
+- [5·18민주화운동기록관](https://www.518archives.go.kr) ← 직접 검색
+- [민주화운동 오픈아카이브](http://db.kdemocracy.or.kr) ← 직접 검색
 
-<h3>🌏 역사적 의의와 영향</h3>
-<p>해당 인물/사건이 후대에 미친 영향, 현재적 의미, 역사적 위치를 평가</p>
+**일본 자료 (일본어 키워드)**
+- [일본 국립국회도서관](https://dl.ndl.go.jp/search?keyword=일본어키워드)
+- [CiNii 일본학술정보](https://cir.nii.ac.jp/all?q=일본어키워드)
+- [아시아역사자료센터 JACAR](https://www.jacar.go.jp) ← 직접 검색
 
-<h3>📚 더 알아볼 키워드</h3>
-<p>관련하여 추가로 탐구할 수 있는 인물, 사건, 개념을 <strong>키워드</strong> 형태로 3~5개 제시</p>
+**중국 자료 (중국어 키워드)**
+- [CNKI 중국지망](https://www.cnki.net) ← 직접 검색
+- [중국 국가도서관](https://www.nlc.cn) ← 직접 검색
 
-<p class="disclaimer">⚠ 이 내용은 AI가 정리한 자료입니다. 중요한 연구에는 공식 사료를 직접 확인하시기 바랍니다.</p>
+**서구 자료 (영어 키워드)**
+- [영국 국립문서보관소](https://discovery.nationalarchives.gov.uk/results/r?_q=영어키워드)
+- [영국 의회의사록 Hansard](https://hansard.parliament.uk/search?searchTerm=영어키워드)
+- [미국 의회도서관](https://www.loc.gov/search/?q=영어키워드)
+- [미국 역사신문 Chronicling America](https://chroniclingamerica.loc.gov/search/pages/results/?andtext=영어키워드)
+- [인터넷 아카이브](https://archive.org/search?query=영어키워드)
+- [구글 북스](https://www.google.com/search?tbm=bks&q=영어키워드)
+- [프랑스 국립도서관 Gallica](https://gallica.bnf.fr/Search?q=영어키워드)
+- [독일 디지털도서관](https://www.deutsche-digitale-bibliothek.de/search?query=영어키워드)
+- [영국 국립도서관](https://www.bl.uk) ← 직접 검색`;
 
-## 마지막에 반드시 추가할 것
-<keywords>
-{"ko":"한국어키워드","en":"English keyword","ja":"日本語キーワード","zh":"中文关键词","fr":"mot-clé français","de":"deutsches Stichwort","ru":"русское слово","pt":"palavra-chave","es":"palabra clave"}
-</keywords>`;
-
-// ── 카테고리별 언어 매핑 ──
-function getLangForCat(cat) {
-  if (cat.includes('한국사')) return 'ko';
-  if (cat.includes('중국') || cat.includes('타이완')) return 'zh';
-  if (cat.includes('일본')) return 'ja';
-  if (cat.includes('프랑스')) return 'fr';
-  if (cat.includes('독일') || cat.includes('오스트리아')) return 'de';
-  if (cat.includes('러시아')) return 'ru';
-  if (cat.includes('스페인') || cat.includes('중남미') || cat.includes('포르투갈')) return 'es';
-  return 'en';
+function copyPrompt() {
+  navigator.clipboard.writeText(CLAUDE_PROMPT).then(() => {
+    const btn = document.getElementById('copyBtn');
+    btn.classList.add('copied');
+    btn.textContent = '✅ 복사됐어요!';
+    showToast('📋 지시문이 복사됐어요! Claude.ai 프로젝트에 붙여넣으세요.');
+    setTimeout(() => { btn.classList.remove('copied'); btn.innerHTML = '📋 지시문 복사하기'; }, 3000);
+  });
 }
 
-// ── 사이드바 ──
-function renderSidebar() {
-  document.getElementById('siteCountNum').textContent = SITES.length;
-  const tabHtml = ['<button class="cat-tab active" onclick="filterCat(this,\'ALL\')">전체</button>']
-    .concat(CATEGORIES.map(c => `<button class="cat-tab" onclick="filterCat(this,'${c}')">${c.split(' - ').pop()}</button>`));
-  document.getElementById('catTabs').innerHTML = tabHtml.join('');
-  renderSiteItems();
-}
-
-function filterCat(btn, cat) {
-  activeCat = cat;
-  document.querySelectorAll('.cat-tab').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
-  renderSiteItems();
-}
-
-function renderSiteItems() {
-  const filtered = activeCat === 'ALL' ? SITES : SITES.filter(s => s.cat === activeCat);
-  document.getElementById('siteList').innerHTML = filtered.map(s => `
-    <div class="site-item">
-      <span class="site-name">${s.name}</span>
-      <span class="site-badge ${s.search ? 'badge-search' : 'badge-home'}">${s.search ? '🔍 검색연결' : '🏠 홈페이지'}</span>
-      <span class="site-url">${s.url.replace(/https?:\/\//,'').split('/')[0]}</span>
-    </div>`).join('');
-}
-
-// ── 검색 링크 생성 (선택된 카테고리만) ──
-function buildSiteLinks(keywords) {
-  const isObj = typeof keywords === 'object';
-  const koKw = isObj ? (keywords.ko || '') : keywords;
-
-  // 선택된 카테고리만 필터링
-  const filtered = SITES.filter(s => activeCatFilter.has(s.cat));
-
-  if (filtered.length === 0) {
-    return `<div class="site-links-section">
-      <div class="site-links-label">⚠ 선택된 카테고리가 없어요. 아래 카테고리 버튼을 눌러 선택해주세요.</div>
-    </div>`;
-  }
-
-  const buttons = filtered.map(s => {
-    const lang = getLangForCat(s.cat);
-    const kw = isObj ? (keywords[lang] || keywords.en || koKw) : keywords;
-    const enc = encodeURIComponent(kw);
-    const href = s.search ? s.search.replace('{k}', enc) : s.url;
-    const type = s.search ? 'type-search' : 'type-home';
-    const icon = s.search ? '🔍' : '🏠';
-    const langTag = s.search ? `<span class="lang-tag">${lang.toUpperCase()}</span>` : '';
-    return `<a class="site-link-btn ${type}" href="${href}" target="_blank" rel="noopener">${icon}${langTag} ${s.name}</a>`;
-  }).join('');
-
-  const kwSummary = isObj
-    ? `🇰🇷 ${keywords.ko||''}  🌐 ${keywords.en||''}  🇯🇵 ${keywords.ja||''}  🇨🇳 ${keywords.zh||''}`
-    : keywords;
-
-  const searchCount = filtered.filter(s=>s.search).length;
-  const homeCount = filtered.filter(s=>!s.search).length;
-
-  return `<div class="site-links-section">
-    <div class="site-links-label">📂 원문 자료 검색 — ${filtered.length}개 사이트 (🔍${searchCount} · 🏠${homeCount})</div>
-    <div class="kw-summary">${kwSummary}</div>
-    <div class="site-links-grid">${buttons}</div>
-  </div>`;
-}
-
-// ── 엑셀 업로드 ──
-function handleExcelUpload(event) {
-  const file = event.target.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = e => {
-    try {
-      const wb = XLSX.read(new Uint8Array(e.target.result), {type:'array'});
-      const ws = wb.Sheets[wb.SheetNames[0]];
-      const range = XLSX.utils.decode_range(ws['!ref']);
-      const newSites = [];
-      for (let r = range.s.r; r <= range.e.r; r++) {
-        const cA = ws[XLSX.utils.encode_cell({r,c:0})];
-        const cB = ws[XLSX.utils.encode_cell({r,c:1})];
-        if (!cA) continue;
-        const name = String(cA.v||'').trim();
-        const desc = cB ? String(cB.v||'').trim() : '';
-        let url = '';
-        if (cA.l?.Target) url = cA.l.Target;
-        else if (name.startsWith('http')) url = name;
-        if (name && url?.startsWith('http'))
-          newSites.push({cat:'사용자 추가', name, url, desc, search:null});
-      }
-      if (newSites.length > 0) {
-        newSites.forEach(s => SITES.push(s));
-        renderSidebar();
-        showToast(`✅ ${newSites.length}개 사이트가 추가됐어요!`);
-      } else {
-        showToast('⚠ 읽을 수 있는 사이트 정보가 없어요.');
-      }
-    } catch(err) { showToast('⚠ 파일을 읽는 중 오류가 발생했어요.'); }
-    event.target.value = '';
-  };
-  reader.readAsArrayBuffer(file);
-}
-
-// ── Toast ──
+// ── 토스트 ──
 function showToast(msg) {
-  document.querySelector('.toast')?.remove();
-  const t = document.createElement('div');
-  t.className = 'toast'; t.textContent = msg;
-  document.body.appendChild(t);
-  setTimeout(() => t.remove(), 3000);
-}
-
-// ── 채팅 UI ──
-const chatEl = document.getElementById('chat');
-const inputEl = document.getElementById('input');
-const sendBtn = document.getElementById('sendBtn');
-
-inputEl.addEventListener('input', () => {
-  inputEl.style.height = 'auto';
-  inputEl.style.height = Math.min(inputEl.scrollHeight, 110) + 'px';
-});
-inputEl.addEventListener('keydown', e => {
-  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
-});
-
-function sendSuggestion(t) { inputEl.value = t; sendMessage(); }
-
-function appendMessage(role, html, isHtml=false) {
-  const d = document.createElement('div');
-  d.className = `message ${role}`;
-  const av = document.createElement('div');
-  av.className = `avatar ${role}`; av.textContent = role==='ai'?'🏛':'👤';
-  const b = document.createElement('div');
-  b.className = 'bubble';
-  isHtml ? (b.innerHTML = html) : (b.textContent = html);
-  d.appendChild(av); d.appendChild(b);
-  chatEl.appendChild(d); chatEl.scrollTop = chatEl.scrollHeight;
-}
-
-function showTyping() {
-  const d = document.createElement('div');
-  d.className = 'message ai'; d.id = 'typing';
-  const av = document.createElement('div');
-  av.className = 'avatar ai'; av.textContent = '🏛';
-  const b = document.createElement('div');
-  b.className = 'bubble';
-  b.innerHTML = '<div class="typing-indicator"><span></span><span></span><span></span></div>';
-  d.appendChild(av); d.appendChild(b);
-  chatEl.appendChild(d); chatEl.scrollTop = chatEl.scrollHeight;
-}
-function removeTyping() { document.getElementById('typing')?.remove(); }
-
-// ── 메시지 전송 ──
-let inputEl_last = '';
-async function sendMessage() {
-  const text = inputEl.value.trim();
-  if (!text) return;
-
-  // API 키 확인
-  const apiKey = document.getElementById('apiKeyInput').value.trim();
-  if (!apiKey) {
-    showToast('⚠ 상단에 Groq API 키를 먼저 입력해주세요!');
-    document.getElementById('apiKeyInput').focus();
-    return;
-  }
-
-  inputEl_last = text;
-  document.getElementById('welcome')?.remove();
-  appendMessage('user', text);
-  inputEl.value = ''; inputEl.style.height = 'auto';
-  sendBtn.disabled = true;
-  history.push({role:'user', content:text});
-  showTyping();
-
-  try {
-    // Groq API 호출
-    const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-      method:'POST',
-      headers:{
-        'Content-Type':'application/json',
-        'Authorization':`Bearer ${apiKey}`
-      },
-      body: JSON.stringify({
-        model:'llama-3.3-70b-versatile',
-        max_tokens: 4000,
-        temperature: 0.7,
-        messages:[
-          {role:'system', content: SYSTEM_PROMPT},
-          ...history
-        ]
-      })
-    });
-    const data = await res.json();
-    removeTyping();
-
-    if (!res.ok) {
-      const msg = data.error?.message || '알 수 없는 오류';
-      appendMessage('ai', `<div class="error-bubble">⚠ Groq 오류: ${msg}<br><small>API 키를 다시 확인해주세요.</small></div>`, true);
-      history.pop(); sendBtn.disabled = false; return;
-    }
-
-    const fullText = data.choices?.[0]?.message?.content || '';
-
-    // <keywords> 블록에서 다국어 키워드 추출
-    let keywords;
-    const kwMatch = fullText.match(/<keywords>\s*([\s\S]*?)\s*<\/keywords>/);
-    if (kwMatch) {
-      try { keywords = JSON.parse(kwMatch[1]); } catch(e) {}
-    }
-    if (!keywords) {
-      const ko = inputEl_last.replace(/[?!？！。을를이가은는에서의도]/g,'').trim().slice(0,15);
-      keywords = {ko, en:ko, ja:ko, zh:ko, fr:ko, de:ko, ru:ko, pt:ko, es:ko};
-    }
-
-    const displayText = fullText.replace(/<keywords>[\s\S]*?<\/keywords>/g,'').trim();
-    appendMessage('ai', (displayText||'답변을 가져오지 못했습니다.') + buildSiteLinks(keywords), true);
-
-    // 히스토리 저장
-    history.push({role:'assistant', content: fullText});
-
-  } catch(err) {
-    removeTyping();
-    appendMessage('ai', `<div class="error-bubble">⚠ 네트워크 오류가 발생했습니다.<br><small>${err.message}</small></div>`, true);
-    history.pop();
-  }
-  sendBtn.disabled = false;
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.style.display = 'block';
+  setTimeout(() => { t.style.display = 'none'; }, 3500);
 }
 
 // ── 초기화 ──
-renderSidebar();
-renderCatFilter();
+renderFilter();
+renderSites();
 </script>
 </body>
 </html>

@@ -38,20 +38,6 @@
     .card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:24px;margin-bottom:20px;}
     .card-title{font-family:'Noto Serif KR',serif;font-size:15px;color:var(--gold-light);margin-bottom:14px;display:flex;align-items:center;gap:8px;}
 
-    /* SEARCH */
-    .search-row{display:flex;gap:10px;flex-wrap:wrap;}
-    .search-input{flex:1;min-width:200px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;color:var(--text);font-family:'Noto Sans KR',sans-serif;font-size:14px;padding:11px 16px;outline:none;transition:border-color .2s;}
-    .search-input:focus{border-color:var(--gold-dim);}
-    .search-input::placeholder{color:var(--text-muted);}
-    .btn-gold{background:linear-gradient(135deg,var(--gold-dim),var(--gold));border:none;border-radius:10px;color:#1a1000;font-family:'Noto Sans KR',sans-serif;font-size:13px;font-weight:600;padding:11px 20px;cursor:pointer;transition:all .2s;white-space:nowrap;}
-    .btn-gold:hover{opacity:.85;}
-    .btn-dim{background:var(--surface2);border:1px solid var(--border);border-radius:10px;color:var(--text-muted);font-family:'Noto Sans KR',sans-serif;font-size:12px;padding:11px 16px;cursor:pointer;transition:all .2s;}
-    .btn-dim:hover{border-color:var(--gold-dim);color:var(--text);}
-
-    .kw-langs{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px;}
-    .kw-tag{background:var(--surface2);border:1px solid var(--border);border-radius:6px;font-size:11px;padding:4px 10px;color:var(--text-muted);}
-    .kw-tag b{color:var(--gold-light);}
-
     /* FILTER */
     .filter-grid{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:8px;}
     .filter-btn{background:var(--surface2);border:1px solid var(--border);color:var(--text-muted);font-family:'Noto Sans KR',sans-serif;font-size:11px;padding:4px 10px;border-radius:5px;cursor:pointer;transition:all .15s;}
@@ -129,13 +115,13 @@
   <div class="header-icon">🏛</div>
   <div class="header-text">
     <h1>역사 자료 탐구 도구</h1>
-    <p>키워드로 142개 역사 자료 사이트를 한번에 검색 · AI 답변은 Claude.ai 프로젝트 활용</p>
+    <p>카테고리별로 142개 역사 자료 사이트에 바로 접속 · AI 답변은 Claude.ai 프로젝트 활용</p>
   </div>
   <div class="header-badge">사이트 <span>142</span>개</div>
 </header>
 
 <nav class="nav-tabs">
-  <button class="nav-tab active" onclick="showPage('search')">🔍 사이트 검색</button>
+  <button class="nav-tab active" onclick="showPage('search')">📚 자료 사이트 목록</button>
   <button class="nav-tab" onclick="showPage('claude')">🤖 AI 답변 받기</button>
   <button class="nav-tab" onclick="showPage('guide')">📖 사용 안내</button>
 </nav>
@@ -144,16 +130,6 @@
      페이지 1: 사이트 검색
 ══════════════════════════════════════════ -->
 <div class="page active" id="page-search">
-
-  <div class="card">
-    <div class="card-title">🔍 키워드 검색</div>
-    <div class="search-row">
-      <input class="search-input" id="searchInput" placeholder="예: 이순신, 임진왜란, 조선시대, Yi Sun-sin..." onkeydown="if(event.key==='Enter')doSearch()"/>
-      <button class="btn-gold" onclick="doSearch()">검색하기</button>
-      <button class="btn-dim" onclick="clearSearch()">초기화</button>
-    </div>
-    <div class="kw-langs" id="kwLangs" style="display:none;"></div>
-  </div>
 
   <div class="card">
     <div class="card-title">🗂 카테고리 필터</div>
@@ -697,7 +673,6 @@ const SITES = [
 
 const CATS = [...new Set(SITES.map(s=>s.cat))];
 let activeCats = new Set(CATS);
-let currentKw = '';
 
 // ── 카테고리 필터 렌더링 ──
 function renderFilter() {
@@ -719,8 +694,6 @@ function selectWest(){activeCats=new Set(['서구 - 영국','서구 - 프랑스'
 
 // ── 사이트 렌더링 ──
 function renderSites() {
-  const kw = currentKw;
-  const enc = encodeURIComponent(kw);
   const filtered = SITES.filter(s => activeCats.has(s.cat));
   document.getElementById('showCount').textContent = filtered.length;
 
@@ -732,12 +705,11 @@ function renderSites() {
   document.getElementById('emptyMsg').style.display = 'none';
 
   document.getElementById('sitesGrid').innerHTML = filtered.map(s => {
-    const href = (kw && s.search) ? s.search.replace('{k}', enc) : s.url;
     const type = s.search ? 'searchable' : 'homepage';
     const badge = s.search
       ? '<span class="site-badge badge-s">🔍 검색연결</span>'
       : '<span class="site-badge badge-h">🏠 홈페이지</span>';
-    return `<a class="site-card ${type}" href="${href}" target="_blank" rel="noopener">
+    return `<a class="site-card ${type}" href="${s.url}" target="_blank" rel="noopener">
       <span class="site-icon">📄</span>
       <span class="site-info">
         <span class="site-name">${s.name}</span>
@@ -746,29 +718,6 @@ function renderSites() {
       ${badge}
     </a>`;
   }).join('');
-}
-
-// ── 검색 ──
-function doSearch() {
-  const val = document.getElementById('searchInput').value.trim();
-  if (!val) return;
-  currentKw = val;
-
-  // 언어 태그 (간단 표시)
-  const langBox = document.getElementById('kwLangs');
-  langBox.style.display = 'flex';
-  langBox.innerHTML = `
-    <div class="kw-tag">🇰🇷 한국어: <b>${val}</b></div>
-    <div class="kw-tag">🌐 영어: <b>${val}</b> (해외 사이트 직접 번역 검색 권장)</div>
-  `;
-  renderSites();
-}
-
-function clearSearch() {
-  currentKw = '';
-  document.getElementById('searchInput').value = '';
-  document.getElementById('kwLangs').style.display = 'none';
-  renderSites();
 }
 
 // ── 페이지 탭 ──
